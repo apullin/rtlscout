@@ -1,10 +1,9 @@
-# RTLRewriter rerun — Opus 4.8, ABC-only phase 2, post-hoc CEC
+# RTLRewriter campaigns
 
-Scripted rerun of `metadocuments/reruns/inputs/HANDOVER_rtlrewriter_rerun.md`
-(deviations recorded in `STATUS.md`). Deliberately minimal — the heavy
-machinery already exists in the repo (`experiments/rtl_rewriter_multirun.py`,
-table/plot scripts, and the bundled three-method
-`artifacts/rtlrewriter_benchmark_results/cec_engine.py`).
+Launcher for the RTLRewriter campaigns (cell-count and transistor-count
+objectives; model and settings per `profiles/*.yaml`). It drives
+`experiments/rtl_rewriter_multirun.py`, the table scripts and the CEC engine
+(`artifacts/rtlrewriter_benchmark_results/cec_engine.py`).
 
 ```bash
 python run_all.py --profile reduced --new-run   # rehearsal: cases 7+9, n=1, 12 steps
