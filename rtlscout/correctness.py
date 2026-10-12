@@ -15,6 +15,7 @@ class SimResult:
     stdout: str
     stderr: str
     returncode: int
+    build_failed: bool = False      # Verilator could not build the sources; stderr is the build log, nothing ran
 
 
 @dataclass
@@ -57,7 +58,24 @@ def _run(args: List[str], cwd: Path, timeout: int = 30) -> SimResult:
         return SimResult(ok=False, stdout="", stderr="Timeout expired", returncode=-1)
     except Exception as e:
         return SimResult(ok=False, stdout="", stderr=str(e), returncode=-1)
-    
+
+
+def verilator_errors(log: str, max_lines: int = 40) -> str:
+    """The ``%Error`` messages of a Verilator log with their indented continuation lines, without the ``%Warning``
+    blocks they are usually buried in (a failing design can emit tens of KB of width warnings around one error).
+    A log without any ``%Error`` line is returned unchanged."""
+    out, keep = [], False
+    for line in log.splitlines():
+        if line.startswith("%"):
+            keep = line.startswith("%Error")
+        if keep:
+            out.append(line)
+    if not out:
+        return log
+    if len(out) > max_lines:
+        out = out[:max_lines] + [f"... ({len(out) - max_lines} more lines)"]
+    return "\n".join(out)
+
 
 verilator_common_flags = [
     "-Wall",
@@ -171,12 +189,8 @@ def simulate(sources: List[Path], top_module: str, workdir: Path, build_timeout:
     try:
         build = _run(build_args, abs_workdir, timeout=build_timeout)
         if not build.ok:
-            return SimResult(
-                ok=False,
-                stdout=build.stdout,
-                stderr=build.stderr,
-                returncode=build.returncode,
-            )
+            return SimResult(ok=False, stdout=build.stdout, stderr=build.stderr, returncode=build.returncode,
+                             build_failed=True)
         # Gate-level netlists (e.g. deepsyn AIGs) simulate ~10x slower than
         # behavioral RTL; the old 30 s default silently killed them.
         return _run([str(obj_dir / "simv")], abs_workdir, timeout=sim_timeout)
@@ -260,7 +274,14 @@ def evaluate_correctness(workdir: Path, design_file: Optional[Path] = None) -> C
 
     lint_result = lint(sources, workdir)
     sim_result = simulate(sources, "tb", workdir)
-    checks = parse_testbench_checks(sim_result.stdout, sim_result.stderr)
+    # What is reported as lint/sim stderr: the raw log, except that a failed Verilator run is reduced to its errors
+    lint_report = lint_result.stderr if lint_result.ok else verilator_errors(lint_result.stderr)
+    sim_report = sim_result.stderr
+    if sim_result.build_failed:
+        checks: List[Dict[str, Any]] = []
+        sim_report = "Verilator could not build the design with the testbench:\n" + verilator_errors(sim_result.stderr)
+    else:
+        checks = parse_testbench_checks(sim_result.stdout, sim_result.stderr)
     total = len(checks)
     passed_checks = sum(1 for c in checks if c.get("passed"))
     all_passed = sim_result.ok and lint_result.ok
@@ -271,9 +292,9 @@ def evaluate_correctness(workdir: Path, design_file: Optional[Path] = None) -> C
         lint_ok=lint_result.ok,
         sim_ok=sim_result.ok,
         lint_stdout=lint_result.stdout,
-        lint_stderr=lint_result.stderr,
+        lint_stderr=lint_report,
         sim_stdout=sim_result.stdout,
-        sim_stderr=sim_result.stderr,
+        sim_stderr=sim_report,
         sim_returncode=sim_result.returncode,
         testbench_checks=checks,
         total_checks=total,
