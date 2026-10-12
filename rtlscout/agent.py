@@ -636,8 +636,7 @@ class RTLAgent:
 
         # Optionally snapshot workspace + results after evaluation
         if self.save_workspaces:
-            eval_dir = self._snapshot_eval(eval_index, eval_dict, summary)
-            summary = f"[Eval saved to {eval_dir.name}/]\n" + summary
+            self._snapshot_eval(eval_index, eval_dict, summary)
 
         return summary
 

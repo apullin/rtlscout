@@ -148,6 +148,9 @@ def test_run_benchmark_simple_adder(tmp_path, monkeypatch):
     assert result.num_steps == 3
     assert list((tmp_path / "runs").rglob("result.json"))
     assert list((tmp_path / "runs").rglob("best_design"))
+    # The per-evaluation snapshot is taken, but the agent is not told about eval_N/ (it cannot read it).
+    assert list((tmp_path / "runs").rglob("eval_1"))
+    assert "Eval saved to" not in next((tmp_path / "runs").rglob("chat_log.txt")).read_text()
 
 
 @requires_verilator
