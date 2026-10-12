@@ -146,6 +146,16 @@ Outside a checkout the package finds its surroundings through these variables (a
 | `RTLSCOUT_CACHE_DIR` | derived files such as the merged ASAP7 liberty | `<checkout>/.cache`, else `~/.cache/rtlscout` |
 | `RTLSCOUT_SPIRE_HDL_DIR` | spire-hdl source tree | `<workspace root>/deps/spire-hdl` |
 
+Requests to OpenRouter models (`openrouter:<vendor>/<model>`) take three more, all unset by default:
+
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `RTLSCOUT_REASONING_EFFORT` | `low`, `medium`, `high` or `off`: the model's reasoning effort | the provider's default |
+| `RTLSCOUT_OPENROUTER_PROVIDERS` | upstream providers to use, e.g. `z-ai`, comma-separated in order of preference, no fallback to others | OpenRouter's routing |
+| `RTLSCOUT_OPENROUTER_MAX_TOKENS` | cap on one completion, reasoning included | the provider's cap |
+
+Each run's `result.json` tallies the providers that served it and the finish reasons (`llm_providers`, `finish_reasons`).
+
 Spire HDL runs (`--language spirehdl` with an agent) quote the spire-hdl documentation and examples in their prompts. Those are part of the spire-hdl repository, not of its wheel, so outside a checkout point `RTLSCOUT_SPIRE_HDL_DIR` at a clone of [spire-hdl](https://github.com/huawei-csl/spire-hdl) at the installed version. Evaluating an existing Spire design (`run_eval`) and all Verilog and Amaranth flows need only the installed packages. The OpenCode backend's orchestrated mode mounts the workspace root into its containers and therefore needs a checkout.
 
 ## Benchmarks

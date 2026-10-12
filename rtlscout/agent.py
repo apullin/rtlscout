@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -192,6 +193,10 @@ class AgentResult:
     duration_s: float = 0.0
     error: str = ""
     best_metrics: Optional[Dict[str, float]] = None
+    # Per-run tallies of who served the LLM calls and how they ended, e.g. {"Z.AI": 61} and
+    # {"tool_calls": 59, "length": 2}; empty for providers that report neither.
+    llm_providers: Dict[str, int] = field(default_factory=dict)
+    finish_reasons: Dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -205,6 +210,8 @@ class AgentResult:
             "all_evals": self.all_evals,
             "num_steps": self.num_steps,
             "token_usage": self.token_usage.to_dict(),
+            "llm_providers": self.llm_providers,
+            "finish_reasons": self.finish_reasons,
             "duration_s": self.duration_s,
             "error": self.error,
         }
@@ -267,6 +274,8 @@ class RTLAgent:
         # Run clock and token total so far, stamped on every evaluation (elapsed_s, cumulative_token_usage)
         self._run_t0: Optional[float] = None
         self._usage_so_far = TokenUsage()
+        self._providers: Counter = Counter()
+        self._finish_reasons: Counter = Counter()
 
         # Benchmark info (set before running)
         self.design_top_module: Optional[str] = None
@@ -718,6 +727,7 @@ class RTLAgent:
             total_usage = total_usage + response.usage
             self._last_step_usage = response.usage
             self._usage_so_far = total_usage
+            self._tally(response)
 
             # Guard against degenerate responses carrying an unbounded
             # tool_calls array (observed: 2,835 identical calls in one GLM
@@ -829,7 +839,15 @@ class RTLAgent:
             messages=self.messages,
             token_usage=total_usage,
             best_metrics=self.best_metrics,
+            llm_providers=dict(self._providers),
+            finish_reasons=dict(self._finish_reasons),
         )
+
+    def _tally(self, response) -> None:
+        if response.provider:
+            self._providers[response.provider] += 1
+        if response.finish_reason:
+            self._finish_reasons[response.finish_reason] += 1
 
     def _request_summary(self, total_usage: TokenUsage) -> TokenUsage:
         """Ask the LLM to summarize the design process and lessons learned."""
@@ -858,6 +876,7 @@ class RTLAgent:
                 tool_choice=None,
             )
             total_usage = total_usage + response.usage
+            self._tally(response)
             summary_text = response.content or ""
             self.messages.append({
                 "role": "assistant",

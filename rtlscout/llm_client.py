@@ -72,6 +72,8 @@ class ChatResponse:
     content: Optional[str]
     tool_calls: List[ToolCall] = field(default_factory=list)
     usage: TokenUsage = field(default_factory=TokenUsage)
+    provider: Optional[str] = None       # who served the request (OpenRouter names the upstream provider)
+    finish_reason: Optional[str] = None  # e.g. "stop", "tool_calls", "length" (hit the max_tokens cap)
 
 
 class LLMClient(ABC):
@@ -133,7 +135,9 @@ class DeepInfraClient(LLMClient):
             usage.input_tokens = response.usage.prompt_tokens or 0
             usage.output_tokens = response.usage.completion_tokens or 0
 
-        return ChatResponse(content=msg.content, tool_calls=tool_calls, usage=usage)
+        return ChatResponse(content=msg.content, tool_calls=tool_calls, usage=usage,
+                            provider=getattr(response, "provider", None),
+                            finish_reason=response.choices[0].finish_reason)
 
 
 class OpenRouterClient(LLMClient):
@@ -171,10 +175,23 @@ class OpenRouterClient(LLMClient):
             kwargs["tool_choice"] = tool_choice
         # RTLSCOUT_REASONING_EFFORT=low|medium|high|off overrides the model's default
         # reasoning effort (hybrid-reasoning models, e.g. kimi-k3). Unset = provider default.
+        extra_body: Dict[str, Any] = {}
         effort = os.environ.get("RTLSCOUT_REASONING_EFFORT")
         if effort:
-            kwargs["extra_body"] = {"reasoning": ({"enabled": False} if effort == "off"
-                                                  else {"effort": effort})}
+            extra_body["reasoning"] = {"enabled": False} if effort == "off" else {"effort": effort}
+        # RTLSCOUT_OPENROUTER_PROVIDERS=slug[,slug...] routes every request to these upstream providers only, in
+        # this order, with no fallback to others (OpenRouter otherwise picks per request; one deployment was seen
+        # mangling tool calls). Unset = OpenRouter's default routing.
+        providers = [p.strip() for p in os.environ.get("RTLSCOUT_OPENROUTER_PROVIDERS", "").split(",") if p.strip()]
+        if providers:
+            extra_body["provider"] = {"order": providers, "allow_fallbacks": False}
+        if extra_body:
+            kwargs["extra_body"] = extra_body
+        # RTLSCOUT_OPENROUTER_MAX_TOKENS caps one completion, reasoning included; a step that reasons past it comes
+        # back with finish_reason "length" and no tool call. Unset = the provider's own cap (131k-943k tokens).
+        max_tokens = os.environ.get("RTLSCOUT_OPENROUTER_MAX_TOKENS")
+        if max_tokens:
+            kwargs["max_tokens"] = int(max_tokens)
         # Retry transient failures (OpenRouter throttles routinely) — without it
         # a single 429/5xx blip aborts a whole multi-step agent run.
         import json as _json
@@ -217,7 +234,9 @@ class OpenRouterClient(LLMClient):
             usage.input_tokens = response.usage.prompt_tokens or 0
             usage.output_tokens = response.usage.completion_tokens or 0
 
-        return ChatResponse(content=msg.content, tool_calls=tool_calls, usage=usage)
+        return ChatResponse(content=msg.content, tool_calls=tool_calls, usage=usage,
+                            provider=getattr(response, "provider", None),
+                            finish_reason=response.choices[0].finish_reason)
 
 
 class AnthropicClient(LLMClient):
