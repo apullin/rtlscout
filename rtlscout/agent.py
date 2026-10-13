@@ -764,10 +764,7 @@ class RTLAgent:
             if not response.tool_calls:
                 # No tool calls - add a reminder and continue
                 if not self.is_done:
-                    self.messages.append({
-                        "role": "user",
-                        "content": f"[Step {step}/{self.max_steps}] Please use a tool. The run ends automatically at the step limit.",
-                    })
+                    self.messages.append({"role": "user", "content": self._nudge(step, response)})
                 continue
 
             # Execute tool calls
@@ -848,6 +845,19 @@ class RTLAgent:
             self._providers[response.provider] += 1
         if response.finish_reason:
             self._finish_reasons[response.finish_reason] += 1
+
+    def _nudge(self, step: int, response) -> str:
+        """The reminder after a reply without a tool call. An empty reply is named as such, with its likely cause:
+        the completion limit cut the reasoning off before any visible output (finish_reason "length")."""
+        ask = "Please use a tool."
+        if not (response.content or "").strip():
+            limit = getattr(self.client, "max_tokens", None)
+            if response.finish_reason == "length":
+                cause = f"the completion limit{f' of {limit:,} tokens' if limit else ''} (reasoning included) was exceeded"
+            else:
+                cause = "possibly the completion limit (reasoning included) was exceeded"
+            ask = f"Empty reply, {cause}. Reason more briefly, then use a tool."
+        return f"[Step {step}/{self.max_steps}] {ask} The run ends automatically at the step limit."
 
     def _request_summary(self, total_usage: TokenUsage) -> TokenUsage:
         """Ask the LLM to summarize the design process and lessons learned."""

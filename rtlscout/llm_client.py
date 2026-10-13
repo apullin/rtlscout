@@ -190,8 +190,9 @@ class OpenRouterClient(LLMClient):
         # RTLSCOUT_OPENROUTER_MAX_TOKENS caps one completion, reasoning included; a step that reasons past it comes
         # back with finish_reason "length" and no tool call. Unset = the provider's own cap (131k-943k tokens).
         max_tokens = os.environ.get("RTLSCOUT_OPENROUTER_MAX_TOKENS")
-        if max_tokens:
-            kwargs["max_tokens"] = int(max_tokens)
+        self.max_tokens = int(max_tokens) if max_tokens else None     # the agent names it when a reply is cut off
+        if self.max_tokens:
+            kwargs["max_tokens"] = self.max_tokens
         # Retry transient failures (OpenRouter throttles routinely) — without it
         # a single 429/5xx blip aborts a whole multi-step agent run.
         import json as _json
