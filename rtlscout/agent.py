@@ -738,10 +738,12 @@ class RTLAgent:
                       f"one response; executing the first {MAX_TOOL_CALLS_PER_STEP}")
                 response.tool_calls = response.tool_calls[:MAX_TOOL_CALLS_PER_STEP]
 
-            # Build message dict for history
+            # Build message dict for history. An empty reply is stored as "" rather than null: some endpoints
+            # (Xiaomi's MiMo) reject every later request of a conversation whose assistant turn has neither
+            # content nor tool calls ("assistant must provide content, reasoning_content or tool_calls").
             msg_dict: Dict[str, Any] = {
                 "role": "assistant",
-                "content": response.content,
+                "content": response.content or "",
             }
             if response.tool_calls:
                 msg_dict["tool_calls"] = [

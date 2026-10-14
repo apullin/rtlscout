@@ -126,6 +126,29 @@ def test_run_eval_skip_sim_cec_only(tmp_path):
 
 @requires_verilator
 @requires_yosys
+def test_empty_reply_is_stored_as_an_empty_string(tmp_path, monkeypatch):
+    """An assistant turn without text or tool calls (a reply cut at the completion cap) goes into the history
+    with content "" and not null: Xiaomi's endpoint rejects every later request of a conversation whose
+    assistant message has neither content nor tool calls."""
+    monkeypatch.setenv("RTLSCOUT_ALLOW_DONE", "1")
+    from rtlscout.benchmarks import load_benchmark
+    from rtlscout.fake_provider import _SCRIPT_REGISTRY, register_fake_script
+    from rtlscout.llm_client import ChatResponse, TokenUsage
+    from rtlscout.runner import run_agent_on_benchmark
+
+    empty = ChatResponse(content=None, tool_calls=[], usage=TokenUsage(input_tokens=10, output_tokens=0),
+                         finish_reason="length")
+    register_fake_script("simple_adder_empty_first", [empty] + list(_SCRIPT_REGISTRY["simple_adder_pass"]))
+    result = run_agent_on_benchmark(load_benchmark(SIMPLE_ADDER_ROOT), model="simple_adder_empty_first",
+                                    runs_dir=tmp_path / "runs", max_steps=10, provider="fake")
+    assert result.passed and result.num_steps == 4
+    assistant = [m for m in result.messages if m["role"] == "assistant"]
+    assert assistant[0] == {"role": "assistant", "content": ""} and all(m["content"] is not None for m in assistant)
+    assert result.messages[result.messages.index(assistant[0]) + 1]["content"].startswith("[Step 1/10] Empty reply")
+
+
+@requires_verilator
+@requires_yosys
 def test_run_benchmark_simple_adder(tmp_path, monkeypatch):
     """Run the agent loop on simple_adder with a fake Verilog provider."""
     # The done tool is off by default (6b72f6e); this test exercises the done path.
