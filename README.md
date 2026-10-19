@@ -109,11 +109,13 @@ The VS Code devcontainer pulls by default; to self-build instead, edit `initiali
 
 ### Install as a Python package
 
-RTL Scout is also an installable package (`rtlscout`), so another project can use it without working inside this checkout. It is installed from git by URL and tag:
+RTL Scout is also an installable package (`rtlscout`), so another project can use it without working inside this checkout. It is installed from git by URL:
 
 ```bash
-pip install "rtlscout @ git+https://github.com/huawei-csl/rtlscout@v0.2.0"
+pip install "rtlscout @ git+https://github.com/huawei-csl/rtlscout"
 ```
+
+This installs the head of the default branch. pip records the exact commit in the package metadata (`direct_url.json`; `pip freeze` prints it as `rtlscout @ git+https://github.com/huawei-csl/rtlscout@<sha>`), so an installation stays traceable; to pin one, append `@<commit>` to the URL.
 
 The EDA tools are not Python packages: install it inside the container image (or wherever Yosys, Verilator, OpenROAD and sv2v are on `PATH`). Every command-line tool is a module of the package; the root scripts of this repository are thin wrappers around them, so both forms below are the same command:
 
@@ -150,7 +152,7 @@ Requests to OpenRouter models (`openrouter:<vendor>/<model>`) take three more, a
 
 | Variable | Meaning | Default |
 |----------|---------|---------|
-| `RTLSCOUT_REASONING_EFFORT` | `low`, `medium`, `high` or `off`: the model's reasoning effort | the provider's default |
+| `RTLSCOUT_REASONING_EFFORT` | `low`, `medium`, `high`, `max` or `off`: the model's reasoning effort, passed through to the provider (which levels a model offers is the provider's business) | the provider's default |
 | `RTLSCOUT_OPENROUTER_PROVIDERS` | upstream providers to use, e.g. `z-ai`, comma-separated in order of preference, no fallback to others | OpenRouter's routing |
 | `RTLSCOUT_OPENROUTER_MAX_TOKENS` | cap on one completion, reasoning included | the provider's cap |
 
@@ -500,12 +502,24 @@ The cost metric is configurable via `--cost-metric`. All metrics follow the same
 | Delay | `delay` | Yosys + OpenROAD STA | Critical-path delay (ps) |
 | Area | `area` | Yosys + OpenROAD STA | Design area (um^2) |
 | Power | `power` | Yosys + OpenROAD STA | Total power (W) |
+| Area × delay | `area_delay_product` | Yosys + OpenROAD STA | Area (um^2) × critical-path delay (ps): the classic area-delay product, the metric of the public leaderboard |
+| Area × delay, fast | `area_delay_product_fast` | Yosys + ABC | The same product from a direct yosys → BLIF → ABC mapping onto the asap7 library: no OpenROAD, no netlist simulation, no target-delay constraint; the quick path for large designs |
+| Area × delay, sky130 | `sky130_adp`, `sky130_adp_v2` | Yosys + ABC | Area × delay against the sky130 high-density library through the same direct ABC path; `_v2` cleans alias buffers before mapping |
+| Cycles | `cycles` | simulation only | The workload's cycle count as reported by the testbench (`TB_CYCLES total=<C>`); no synthesis |
+| Runtime | `runtime` | Yosys + OpenROAD STA | cycles × achieved critical-path delay: the workload's execution time |
+| Area × runtime | `area_runtime_product` | Yosys + OpenROAD STA | area × cycles × delay: inverse throughput per area for the fixed workload (not the classic area × delay) |
+| Accesses | `accesses` | simulation only | Memory reads + writes reported by the testbench (`TB_READS`, `TB_WRITES`), a data-movement proxy; no synthesis |
+| Accesses × area × runtime | `access_area_runtime_product` | Yosys + OpenROAD STA | accesses^k × area × runtime; `k` is `--energy-exp` (default 1), k = 0 reduces it to `area_runtime_product` |
+| Energy | `energy` | Yosys + OpenROAD + netlist simulation | Measured energy (fJ) of the workload: total power at the achieved clock from the VCD-annotated gate-level simulation × runtime |
+| Energy × area × runtime | `energy_area_runtime_product` | Yosys + OpenROAD + netlist simulation | energy^k × area × runtime with `k` = `--energy-exp` (default 1) |
 | AIG count | `aig_count` | Yosys + aigverse | Post-optimization AIG AND-node count (`num_gates` = `len(aig.gates())`, i.e. AND nodes only, excluding the constant and primary-input nodes), combinational designs only |
 | AIG depth | `aig_depth` | Yosys + aigverse | Post-optimization AIG logic depth (`DepthAig.num_levels()`), combinational designs only |
 
-**Transistors** runs a fast Yosys + ABC flow (`proc; opt; fsm; memory; opt; techmap; opt; abc -fast; opt`) and reads the estimated transistor count from `stat -tech cmos`. The **yosys_cells / yosys_wires / yosys_transistors** variants are Yosys-only (technology-independent): they skip ABC and instead run `synth; clean -purge; stat`. The `clean -purge` step drops public-alias buffers that `opt_clean` preserves for debuggability, giving counts that more faithfully reflect the netlist. **Delay/area/power** use the `rtlscout.tech_eval` package which synthesizes against a standard cell library (nangate45) and runs OpenROAD static timing analysis. **aig_count / aig_depth** measure the And-Inverter Graph after aigverse AIG optimization (yosys `aigmap` → aigverse); combinational designs only.
+**Transistors** runs a fast Yosys + ABC flow (`proc; opt; fsm; memory; opt; techmap; opt; abc -fast; opt`) and reads the estimated transistor count from `stat -tech cmos`. The **yosys_cells / yosys_wires / yosys_transistors** variants are Yosys-only (technology-independent): they skip ABC and instead run `synth; clean -purge; stat`. The `clean -purge` step drops public-alias buffers that `opt_clean` preserves for debuggability, giving counts that more faithfully reflect the netlist. **Delay/area/power** and the products built on them use the `rtlscout.tech_eval` package, which synthesizes against a standard cell library and runs OpenROAD static timing analysis; the library is `--technology asap7` by default (`nangate45` and `freepdk45` are the alternatives). **aig_count / aig_depth** measure the And-Inverter Graph after aigverse AIG optimization (yosys `aigmap` → aigverse); combinational designs only.
 
 For PPA metrics, the `--target-delay` flag (in ps) controls the synthesis timing constraint. Lower values push for faster designs at the expense of area/power.
+
+The cycle-aware metrics (`cycles`, `runtime`, `area_runtime_product`, `accesses`, `access_area_runtime_product`, `energy`, `energy_area_runtime_product`) need a testbench that prints `TB_CYCLES total=<C>` (and `TB_READS total=<R>` / `TB_WRITES total=<W>` for the access metrics) when the workload is done; benchmarks without those lines fail cleanly under them. The two `energy` metrics simulate the gate-level netlist with activity capture, so they cannot run with `--skip-netlist-sim`. `--energy-exp k` sets the exponent of the first factor in `access_area_runtime_product` and `energy_area_runtime_product`; it is an exponent rather than a weight because scaling one factor of a product never changes which design is optimal.
 
 ## Usage
 
@@ -645,8 +659,10 @@ python run_eval.py runs/.../workspace/design.py --json
 
 Flags:
 - `--language`: `verilog`, `spirehdl`, or `amaranth` (default: auto-detect from extension)
-- `--cost-metric`: any registered metric (e.g. `transistors`, `yosys_cells`, `yosys_wires`, `yosys_transistors`, `delay`, `area`, `power`, `aig_count`, `aig_depth`)
+- `--cost-metric`: any registered metric (e.g. `transistors`, `yosys_cells`, `yosys_wires`, `yosys_transistors`, `delay`, `area`, `power`, `area_delay_product`, `area_runtime_product`, `energy`, `aig_count`, `aig_depth`; see [Cost metrics](#cost-metrics))
 - `--target-delay`: synthesis timing constraint in ps (default: 500)
+- `--technology`: standard cell library for the PPA metrics: `asap7` (default), `nangate45` or `freepdk45`
+- `--energy-exp`: exponent `k` of `access_area_runtime_product` and `energy_area_runtime_product` (default: 1.0)
 - `--top-module`: override top module name (default: auto-detect from `design.v`)
 - `--workdir`: override workspace directory (default: parent of design file)
 - `--benchmark`: copy `tb.sv` and `vectors.dat` from this benchmark directory into the workspace before evaluation
