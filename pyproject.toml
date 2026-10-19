@@ -26,7 +26,7 @@ Issues = "https://github.com/huawei-csl/rtlscout/issues"
 Paper = "https://arxiv.org/abs/2606.06530"
 
 [tool.setuptools.packages.find]
-include = ["rtlscout*", "core"]    # core: compatibility alias of rtlscout, removed in the next release
+include = ["rtlscout*"]
 
 [tool.setuptools.package-data]
 rtlscout = [
