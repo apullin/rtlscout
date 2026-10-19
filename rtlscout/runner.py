@@ -14,7 +14,7 @@ from rtlscout import paths
 from rtlscout.agent import AgentResult
 from rtlscout.benchmarks import Benchmark, RootsLike, load_benchmarks, normalize_roots
 from rtlscout.cost import CostMetric
-from rtlscout.llm_client import AnthropicClient, DeepInfraClient, OpenRouterClient, LLMClient
+from rtlscout.llm_client import AnthropicClient, DeepInfraClient, OpenAICompatibleClient, OpenRouterClient, LLMClient
 
 # Load .env for API keys
 paths.load_env()
@@ -89,7 +89,7 @@ def _write_chat_log(result: "AgentResult", path: Path) -> None:
     path.write_text("\n".join(lines))
 
 
-KNOWN_PROVIDERS = {"deepinfra", "anthropic", "openrouter", "fake"}
+KNOWN_PROVIDERS = {"deepinfra", "anthropic", "openrouter", "local", "fake"}
 
 
 def parse_model_spec(spec: str) -> tuple:
@@ -98,6 +98,7 @@ def parse_model_spec(spec: str) -> tuple:
     The provider prefix is required — there is no default provider. Examples:
         'anthropic:claude-sonnet-4-5-20250929' -> ('anthropic', 'claude-sonnet-4-5-20250929')
         'deepinfra:meta-llama/Llama-3.3-70B-Instruct-Turbo' -> ('deepinfra', 'meta-llama/Llama-3.3-70B-Instruct-Turbo')
+        'local:Qwen/Qwen3-32B' -> ('local', 'Qwen/Qwen3-32B')   (a self-hosted server, see LOCAL_BASE_URL)
 
     Raises ValueError if the spec has no recognised '<provider>:' prefix.
     """
@@ -131,11 +132,18 @@ def build_client(
         if not key:
             raise ValueError("ANTHROPIC_API_KEY not set")
         return AnthropicClient(model=model, api_key=key)
+    elif provider == "local":
+        base_url = os.environ.get("LOCAL_BASE_URL")
+        if not base_url:
+            raise ValueError("LOCAL_BASE_URL not set: the /v1 endpoint of the local server, e.g. "
+                             "http://localhost:8000/v1 (vLLM) or http://localhost:11434/v1 (Ollama)")
+        key = api_key or os.environ.get("LOCAL_API_KEY") or "not-needed"
+        return OpenAICompatibleClient(model=model, api_key=key, base_url=base_url)
     elif provider == "fake":
         from rtlscout.fake_provider import build_fake_client
         return build_fake_client(model)
     else:
-        raise ValueError(f"Unknown provider: {provider}. Use 'deepinfra', 'openrouter', 'anthropic', or 'fake'.")
+        raise ValueError(f"Unknown provider: {provider}. Use 'deepinfra', 'openrouter', 'anthropic', 'local', or 'fake'.")
 
 
 def provision_workspace(

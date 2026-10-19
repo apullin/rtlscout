@@ -93,18 +93,24 @@ class LLMClient(ABC):
         ...
 
 
-class DeepInfraClient(LLMClient):
-    """OpenAI-compatible client for DeepInfra."""
+class OpenAICompatibleClient(LLMClient):
+    """Client for any server that speaks the OpenAI chat-completions API with tool calls.
 
-    DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
+    Used as is for a self-hosted model (``local:<model>``: vLLM, Ollama, llama.cpp, LM Studio, ... at
+    ``base_url``, their ``/v1`` root) and subclassed for hosted providers that fix the URL. The server's own
+    retry and timeout settings are the SDK's (``RTLSCOUT_LLM_TIMEOUT``, ``RTLSCOUT_LLM_RETRIES``); most local
+    servers accept any non-empty API key.
+    """
 
     def __init__(
         self,
         model: str,
         api_key: str,
-        base_url: str = DEEPINFRA_BASE_URL,
+        base_url: str,
     ):
         super().__init__(model)
+        if not base_url:
+            raise ValueError("OpenAICompatibleClient needs the server's base URL (its /v1 root)")
         self._client = OpenAI(api_key=api_key, base_url=base_url,
                               timeout=_TIMEOUT, max_retries=_MAX_RETRIES)
 
@@ -138,6 +144,15 @@ class DeepInfraClient(LLMClient):
         return ChatResponse(content=msg.content, tool_calls=tool_calls, usage=usage,
                             provider=getattr(response, "provider", None),
                             finish_reason=response.choices[0].finish_reason)
+
+
+class DeepInfraClient(OpenAICompatibleClient):
+    """OpenAI-compatible client for DeepInfra."""
+
+    DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
+
+    def __init__(self, model: str, api_key: str, base_url: str = DEEPINFRA_BASE_URL):
+        super().__init__(model, api_key, base_url)
 
 
 class OpenRouterClient(LLMClient):
