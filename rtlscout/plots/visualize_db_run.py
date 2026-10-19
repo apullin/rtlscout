@@ -5,10 +5,10 @@ Reads only on-disk run artifacts — design_db provenance/metrics/manifest, agen
 eval_N snapshot times, _deadline_epoch — and emits one self-contained HTML report (inline SVG,
 native tooltips, zero dependencies): per-slot Pareto fronts (area x AIG depth) colored by
 source tag, the main agent's selections, admission timelines with running best, agent activity
-lanes, and (if measure_db_compositions.py ran on the run first) the measured full-circuit
+lanes, and (if rtlscout.tools.measure_db_compositions ran on the run first) the measured full-circuit
 composition space.
 
-Usage: python visualize_db_run.py <run_dir> [-o out.html]
+Usage: python -m rtlscout.plots.visualize_db_run <run_dir> [-o out.html]
 """
 import datetime as dt
 import json
@@ -447,7 +447,7 @@ def build_story(slots, colors, comp):
                       + (f" Splicing just the seeded originals measures {base['area']}/{base['depth']}"
                          f" — the decomposition itself contributes." if base else ""))
     else:
-        story += (" Run <code>measure_db_compositions.py &lt;run_dir&gt;</code> first to add the "
+        story += (" Run <code>rtlscout.tools.measure_db_compositions &lt;run_dir&gt;</code> first to add the "
                   "full-circuit composition-space panel (measured splice combinations).")
     return story
 

@@ -48,23 +48,23 @@ jobs:
         run: |
           . /home/vscode/pyenv_eda/bin/activate
           printf 'module adder(input [7:0] a, b, output [7:0] sum);\n  assign sum = a + b;\nendmodule\n' > /tmp/adder.sv
-          python run_eval.py /tmp/adder.sv --benchmark benchmarks/simple_adder --top-module adder --cost-metric transistors
-          python run_eval.py /tmp/adder.sv --benchmark benchmarks/simple_adder --top-module adder --cost-metric sky130_adp
+          python -m rtlscout.run_eval /tmp/adder.sv --benchmark benchmarks/simple_adder --top-module adder --cost-metric transistors
+          python -m rtlscout.run_eval /tmp/adder.sv --benchmark benchmarks/simple_adder --top-module adder --cost-metric sky130_adp
 
-      - name: Agent-loop smoke — full run_benchmark.py with a fake (offline) LLM, no API key
+      - name: Agent-loop smoke — full rtlscout.run_benchmark with a fake (offline) LLM, no API key
         run: |
           . /home/vscode/pyenv_eda/bin/activate
-          python run_benchmark.py --benchmark simple_adder --model fake:simple_adder_pass --runs-dir /tmp/runs | tee /tmp/bench.log
+          python -m rtlscout.run_benchmark --benchmark simple_adder --model fake:simple_adder_pass --runs-dir /tmp/runs | tee /tmp/bench.log
           grep -q 'Best: PASS' /tmp/bench.log   # fail the job if the agent loop didn't produce a passing design
 
-      - name: Pipeline smoke — run_pipeline.py end-to-end with a fake (offline) LLM, no API key
+      - name: Pipeline smoke — rtlscout.run_pipeline end-to-end with a fake (offline) LLM, no API key
         run: |
           . /home/vscode/pyenv_eda/bin/activate
           # 1) plan only (no execution, no provider) — catches argparse / plan-building regressions
-          python run_pipeline.py --benchmark simple_adder --model fake:simple_adder_pass \
+          python -m rtlscout.run_pipeline --benchmark simple_adder --model fake:simple_adder_pass \
               --metrics transistors --pareto-dims cells,transistors --dry-run
           # 2) real end-to-end on the fake provider: Phase 1 -> seeded Phase 2 -> combined Pareto
-          python run_pipeline.py --benchmark simple_adder --model fake:simple_adder_pass \
+          python -m rtlscout.run_pipeline --benchmark simple_adder --model fake:simple_adder_pass \
               --metrics transistors --pareto-dims cells,transistors \
               --total-runs 1 --max-concurrent 1 --max-steps 5 \
               --runs-root /tmp/pipe --out /tmp/pipe_pareto | tee /tmp/pipe.log

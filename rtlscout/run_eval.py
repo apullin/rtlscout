@@ -19,17 +19,17 @@ Execution model — two orthogonal knobs:
                          ``obj_dir``) for inspection, pass ``--in-place``.
 
 Usage:
-  python run_eval.py benchmarks/fpmul_f16/context/starting_point.py --benchmark benchmarks/fpmul_f16
+  python -m rtlscout.run_eval benchmarks/fpmul_f16/context/starting_point.py --benchmark benchmarks/fpmul_f16
       (sandboxed: context/ stays pristine)
-  python run_eval.py runs/fpmul_f16/.../workspace/design.py --in-place
+  python -m rtlscout.run_eval runs/fpmul_f16/.../workspace/design.py --in-place
       (evaluate inside the workspace itself; artifacts + .spire_cache land there)
-  python run_eval.py runs/fpmul_f16/.../workspace/design.py --cost-metric delay --target-delay 500
-  python run_eval.py design.aig --benchmark benchmarks/mac_2x8s_sat16 --cost-metric area
+  python -m rtlscout.run_eval runs/fpmul_f16/.../workspace/design.py --cost-metric delay --target-delay 500
+  python -m rtlscout.run_eval design.aig --benchmark benchmarks/mac_2x8s_sat16 --cost-metric area
       (AIG input: with symbols -> sim+cost; symbol-less -> RTL sim skipped automatically)
-  python run_eval.py design.sv --benchmark ... --cost-metric area --skip-rtl-sim
+  python -m rtlscout.run_eval design.sv --benchmark ... --cost-metric area --skip-rtl-sim
       (--skip-rtl-sim: skip the RTL sim only; cost + CEC-vs-golden still run; any language)
 
-Run as ``python -m rtlscout.run_eval``; a checkout also has the root wrapper ``run_eval.py``.
+Run as ``python -m rtlscout.run_eval``.
 """
 
 import argparse
@@ -230,7 +230,7 @@ def main(argv=None):
     parser.add_argument("--json", action="store_true", help="Output result as JSON")
     parser.add_argument("--save-to", default=None, type=Path,
                         help="Save result.json + workspace/ to this directory "
-                             "(compatible with extract_pareto.py)")
+                             "(compatible with rtlscout.extract_pareto)")
     args = parser.parse_args(argv)
 
     design_path = Path(args.file).resolve()

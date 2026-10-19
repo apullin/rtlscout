@@ -6,13 +6,13 @@ of the best designs evolves over time — new agents are seeded from the
 pool (exploitation) or start fresh (exploration).
 
 Usage:
-  python run_multirun.py \
+  python -m rtlscout.run_multirun \
       --benchmark fpmul_f16 \
       --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
       --total-runs 6 --max-concurrent 2 --max-steps 15 \
       --cost-metric delay --language spirehdl
 
-Run as ``python -m rtlscout.run_multirun``; a checkout also has the root wrapper ``run_multirun.py``.
+Run as ``python -m rtlscout.run_multirun``.
 """
 
 import argparse
@@ -63,8 +63,8 @@ def main(argv=None):
     parser.add_argument("--seed-from", default=None,
                         help="Seed elite pool from a previous run. Accepts a directory or "
                              "JSON file: multirun_summary.json, pareto_front.json "
-                             "(from extract_pareto.py), or best_designs.json "
-                             "(from extract_best_designs.py)")
+                             "(from rtlscout.extract_pareto), or best_designs.json "
+                             "(from rtlscout.tools.extract_best_designs)")
     parser.add_argument("--flowy-optimize", action="store_true",
                         help="Enable @flowy_optimized decorator guidance in system prompt (Spire only)")
     parser.add_argument("--abc-optimize", action="store_true",

@@ -148,10 +148,10 @@ regenerated deterministically:
 
 ## Running one
 
-Full eval (correctness + cost) via the framework's `run_eval.py`:
+Full eval (correctness + cost) via the framework's `rtlscout.run_eval`:
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/rtl_rewriter/case1/context/starting_point.v \
     --benchmark benchmarks/rtl_rewriter/case1 \
     --language verilog --cost-metric yosys_cells

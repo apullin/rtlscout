@@ -7,9 +7,9 @@ sorts by cost, and copies the top N design files + a summary JSON
 into the output folder.
 
 Usage:
-    python extract_best_designs.py runs/multirun_20260316_143944 -n 5 -o best_5/
-    python extract_best_designs.py runs/mult8 -n 3 -o best_mult8/
-    python extract_best_designs.py runs/multirun_... -n 5 --sort-by delay
+    python -m rtlscout.tools.extract_best_designs runs/multirun_20260316_143944 -n 5 -o best_5/
+    python -m rtlscout.tools.extract_best_designs runs/mult8 -n 3 -o best_mult8/
+    python -m rtlscout.tools.extract_best_designs runs/multirun_... -n 5 --sort-by delay
 """
 
 import argparse

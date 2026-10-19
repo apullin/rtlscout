@@ -6,7 +6,7 @@ area-vs-delay Pareto front across all cases, and writes the standard
 pareto_front.json + design_NNN/ directory structure.
 
 Usage:
-    python extract_sweep_pareto.py \
+    python -m rtlscout.tools.extract_sweep_pareto \
         /workspaces/rtl_scout/results/ppa/FpMul_e5f10_results.json \
         -o pareto_fronts/fpmul_sweep --separate-dirs -n 50
 """
@@ -16,7 +16,7 @@ import json
 import shutil
 from pathlib import Path
 
-from extract_pareto import pareto_front, _normalized_score
+from rtlscout.extract_pareto import pareto_front, _normalized_score
 
 
 def _load_sweep_entries(json_path: Path) -> list[dict]:

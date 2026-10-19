@@ -36,15 +36,15 @@ Testbenches were generated at benchmark-creation time by compiling the golden `.
 | `adder_4bit_reg` | `rtlcoder/9045/9045_11.v` | `adder_4bit` | **sequential** — clk-only registered adder | `clk`, `a[3:0]`, `b[3:0]`, `cin` → `sum[3:0]`, `cout` |
 | `avg4_reg` | `rtlcoder/13396/13396_4.v` | `average_module` | **sequential** — clk + sync reset, running accumulator | `clk`, `reset`, `a..d[7:0]` → `average[7:0]` |
 
-All 14 benchmarks (7 verilog + 7 spirehdl) were smoke-tested end-to-end with `run_eval.py` on their starting points under `--cost-metric sky130_adp`:
+All 14 benchmarks (7 verilog + 7 spirehdl) were smoke-tested end-to-end with `rtlscout.run_eval` on their starting points under `--cost-metric sky130_adp`:
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl/<name>/context/starting_point.v \
     --benchmark benchmarks/turbo_rtl/<name> \
     --language verilog --cost-metric sky130_adp
 
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl_spirehdl/<name>/context/starting_point.py \
     --benchmark benchmarks/turbo_rtl_spirehdl/<name> \
     --language spirehdl --cost-metric sky130_adp
@@ -110,7 +110,7 @@ Round-2 sweep (the current canonical one) was launched as a smoke run on `adder_
 
 ```bash
 # Round 2: smoke run (foreground)
-~/pyenv_eda/bin/python run_benchmark.py \
+~/pyenv_eda/bin/python -m rtlscout.run_benchmark \
     --benchmark turbo_rtl/adder_4bit_reg \
     --model anthropic:claude-opus-4-6 \
     --max-steps 30 --cost-metric sky130_adp --language verilog \
@@ -119,7 +119,7 @@ Round-2 sweep (the current canonical one) was launched as a smoke run on `adder_
 # Round 2: full sweep (per-language wave; each line backgrounded)
 for b in encoder_8b10b gda_adder_n8m8p2 bcd_to_bin_16b const_mult_3853 \
          rgb_diff_check avg4_reg; do
-  ~/pyenv_eda/bin/python run_benchmark.py \
+  ~/pyenv_eda/bin/python -m rtlscout.run_benchmark \
       --benchmark turbo_rtl/$b \
       --model anthropic:claude-opus-4-6 --max-steps 30 \
       --cost-metric sky130_adp --language verilog \
@@ -127,7 +127,7 @@ for b in encoder_8b10b gda_adder_n8m8p2 bcd_to_bin_16b const_mult_3853 \
 done; wait
 for b in encoder_8b10b gda_adder_n8m8p2 bcd_to_bin_16b const_mult_3853 \
          rgb_diff_check adder_4bit_reg avg4_reg; do
-  ~/pyenv_eda/bin/python run_benchmark.py \
+  ~/pyenv_eda/bin/python -m rtlscout.run_benchmark \
       --benchmark turbo_rtl_spirehdl/$b \
       --model anthropic:claude-opus-4-6 --max-steps 30 \
       --cost-metric sky130_adp --language spirehdl \
@@ -206,7 +206,7 @@ for bench in encoder_8b10b gda_adder_n8m8p2; do
   for metric in area delay; do
     for lang_pair in "verilog turbo_rtl" "spirehdl turbo_rtl_spirehdl"; do
       lang=$(echo $lang_pair | cut -d' ' -f1); root=$(echo $lang_pair | cut -d' ' -f2)
-      ~/pyenv_eda/bin/python run_benchmark.py \
+      ~/pyenv_eda/bin/python -m rtlscout.run_benchmark \
           --benchmark $root/$bench \
           --model anthropic:claude-opus-4-6 --max-steps 30 \
           --cost-metric $metric --language $lang \
@@ -360,9 +360,9 @@ It's **not** that Spire generates intrinsically worse RTL. The three losing camp
 
 1. **(bcd)** Explicit width-cutpoints in Spire: `m.wire(UInt(16), "v4"); v4 <<= expr` at every arithmetic step. The system prompt mentions this trick but ties it to `cat()`-packing; the agent didn't generalize.
 2. **(gda)** `_maybe_share` creates redundant aliased wires. Low-level library issue — harmless in the abstract but occasionally knocks synth into a worse local optimum. Could be fixed by sharing by expression *value* instead of *reference count*, or by tightening the aliasing in `_create_new_shared_wire`.
-3. **(rgb)** Agent strategy difference. A longer step budget (or an elite-pool seeded run via `run_multirun.py`) would very likely find the bit-pattern rewrite in Spire too.
+3. **(rgb)** Agent strategy difference. A longer step budget (or an elite-pool seeded run via `rtlscout.run_multirun`) would very likely find the bit-pattern rewrite in Spire too.
 
-Notably, **Spire already beat the paper's `ppa_opt` on all 5 benchmarks** — it's just losing a rematch vs. its own verilog sibling in 3 of them. A second-stage `run_multirun.py` campaign with `--flowy-optimize` / `--abc-optimize` would probably close the gap further; the current results are from single-run `run_benchmark.py` with no synthesis decorators.
+Notably, **Spire already beat the paper's `ppa_opt` on all 5 benchmarks** — it's just losing a rematch vs. its own verilog sibling in 3 of them. A second-stage `rtlscout.run_multirun` campaign with `--flowy-optimize` / `--abc-optimize` would probably close the gap further; the current results are from single-run `rtlscout.run_benchmark` with no synthesis decorators.
 
 ## Why is Spire still worse — Round 2 analysis (Opus 30-step)
 

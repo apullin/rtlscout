@@ -8,26 +8,26 @@ the reference design, placed in context/ for the agent).
 Usage examples:
 
   # 8-bit unsigned multiplier benchmark
-  python add_benchmark.py multiplier --n-bits 8 --encoding unsigned
+  python -m rtlscout.add_benchmark multiplier --n-bits 8 --encoding unsigned
 
   # 16-bit signed adder benchmark
-  python add_benchmark.py adder --n-bits 16 --encoding twos_complement
+  python -m rtlscout.add_benchmark adder --n-bits 16 --encoding twos_complement
 
   # MAC benchmark
-  python add_benchmark.py mac --n-bits 8 --c-bits 16 --encoding twos_complement
+  python -m rtlscout.add_benchmark mac --n-bits 8 --c-bits 16 --encoding twos_complement
 
   # Integer matmul-accumulate benchmark
-  python add_benchmark.py matmulacc --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
+  python -m rtlscout.add_benchmark matmulacc --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
 
   # Floating-point multiplier benchmark (bfloat16)
-  python add_benchmark.py fpmul --exponent-width 8 --fraction-width 7
+  python -m rtlscout.add_benchmark fpmul --exponent-width 8 --fraction-width 7
 
   # Floating-point matmul-accumulate benchmark
-  python add_benchmark.py fpmatmulacc --dim-m 2 --dim-n 2 --dim-k 2 \
+  python -m rtlscout.add_benchmark fpmatmulacc --dim-m 2 --dim-n 2 --dim-k 2 \
       --exponent-width 5 --fraction-width 10
 
   # Fused integer matmul-accumulate
-  python add_benchmark.py matmulacc-fused --dim-m 4 --dim-n 4 --dim-k 4 --a-width 8
+  python -m rtlscout.add_benchmark matmulacc-fused --dim-m 4 --dim-n 4 --dim-k 4 --a-width 8
 """
 
 from __future__ import annotations
@@ -72,7 +72,9 @@ from spire.arithmetic.int_multipliers.eval.multiplier_stage_options_demo_lib imp
 from spire.arithmetic.int_multipliers.eval.testvector_generation import Encoding
 from spire.verilog_testbench import write_vector_data_file
 
-BENCHMARKS_DIR = Path(__file__).parent / "benchmarks"
+from rtlscout import paths
+
+BENCHMARKS_DIR = paths.workspace_root() / "benchmarks"    # the checkout (or RTLSCOUT_HOME) benchmark tree
 
 SPIREHDL_SRC = Path("/workspaces/rtl_scout/deps/spire-hdl/src/spire")
 
@@ -1071,13 +1073,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent("""\
             Examples:
-              python add_benchmark.py multiplier --n-bits 8
-              python add_benchmark.py adder --n-bits 16 --encoding twos_complement
-              python add_benchmark.py mac --n-bits 8 --c-bits 16
-              python add_benchmark.py matmulacc --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
-              python add_benchmark.py fpmul --exponent-width 8 --fraction-width 7
-              python add_benchmark.py fpmatmulacc --dim-m 2 --dim-n 2 --dim-k 2 --exponent-width 5 --fraction-width 10
-              python add_benchmark.py matmulacc-fused --dim-m 4 --dim-n 4 --dim-k 4 --a-width 8
+              python -m rtlscout.add_benchmark multiplier --n-bits 8
+              python -m rtlscout.add_benchmark adder --n-bits 16 --encoding twos_complement
+              python -m rtlscout.add_benchmark mac --n-bits 8 --c-bits 16
+              python -m rtlscout.add_benchmark matmulacc --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
+              python -m rtlscout.add_benchmark fpmul --exponent-width 8 --fraction-width 7
+              python -m rtlscout.add_benchmark fpmatmulacc --dim-m 2 --dim-n 2 --dim-k 2 --exponent-width 5 --fraction-width 10
+              python -m rtlscout.add_benchmark matmulacc-fused --dim-m 4 --dim-n 4 --dim-k 4 --a-width 8
         """),
     )
     subparsers = parser.add_subparsers(dest="type", required=True)

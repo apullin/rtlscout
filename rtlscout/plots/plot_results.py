@@ -3,13 +3,13 @@
 
 Usage:
   # Plot a single benchmark result
-  python plot_results.py --input runs/<path>/result.json --level benchmark
+  python -m rtlscout.plots.plot_results --input runs/<path>/result.json --level benchmark
 
   # Plot a model summary (across benchmarks)
-  python plot_results.py --input runs/<path>/summary_*.json --level model
+  python -m rtlscout.plots.plot_results --input runs/<path>/summary_*.json --level model
 
   # Plot a sweep (across models and benchmarks)
-  python plot_results.py --input runs/<path>/all_results.json --level sweep
+  python -m rtlscout.plots.plot_results --input runs/<path>/all_results.json --level sweep
 """
 
 import argparse

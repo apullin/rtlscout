@@ -102,7 +102,7 @@ def main(argv=None) -> int:
         python -m rtlscout.containers cleanup --kill          # SIGKILL (panic)
         python -m rtlscout.containers list                    # list managed containers (this framework only)
 
-    A checkout also has the root wrapper `rtlscout_cli.py`. It NEVER touches the VS Code devcontainer: selection
+    It NEVER touches the VS Code devcontainer: selection
     is by the rtlscout.managed label (which the devcontainer doesn't carry), and cleanup additionally refuses
     anything with a devcontainer.local_folder label.
     """

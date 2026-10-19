@@ -26,7 +26,7 @@ def _fingerprint(d: Path):
 @requires_verilator
 @requires_yosys
 def test_run_eval_cli_sandbox_leaves_source_pristine(tmp_path):
-    """run_eval.py's default mode runs in a throwaway sandbox: the source dir
+    """rtlscout.run_eval's default mode runs in a throwaway sandbox: the source dir
     (e.g. a benchmark context/) must be byte-and-mtime identical afterwards —
     no tb.sv/vectors.dat overlay, no obj_dir, no design.v."""
     import subprocess, sys
@@ -39,7 +39,7 @@ def test_run_eval_cli_sandbox_leaves_source_pristine(tmp_path):
 
     before = _fingerprint(src)
     proc = subprocess.run(
-        [sys.executable, "run_eval.py", str(src / "design.sv"),
+        [sys.executable, "-m", "rtlscout.run_eval", str(src / "design.sv"),
          "--benchmark", str(SIMPLE_ADDER_ROOT), "--cost-metric", "yosys_cells"],
         cwd=Path(__file__).parent.parent, capture_output=True, text=True, timeout=300,
     )
@@ -61,7 +61,7 @@ def test_run_eval_cli_in_place(tmp_path):
     (src / "design.sv").write_text(SIMPLE_ADDER_VERILOG)
 
     proc = subprocess.run(
-        [sys.executable, "run_eval.py", str(src / "design.sv"), "--in-place",
+        [sys.executable, "-m", "rtlscout.run_eval", str(src / "design.sv"), "--in-place",
          "--benchmark", str(SIMPLE_ADDER_ROOT), "--cost-metric", "yosys_cells"],
         cwd=Path(__file__).parent.parent, capture_output=True, text=True, timeout=300,
     )
@@ -103,7 +103,7 @@ def test_run_eval_simple_adder(tmp_path):
 
 @requires_yosys
 def test_run_eval_skip_sim_cec_only(tmp_path):
-    """run_rtl_sim=False (run_eval.py --skip-rtl-sim / db-score): no testbench needed,
+    """run_rtl_sim=False (rtlscout.run_eval --skip-rtl-sim / db-score): no testbench needed,
     correctness is skipped, pass comes from the CEC verdict alone — and pass_rate is
     None (not measured), not a misleading 0.0 on a formally proven pass."""
     from rtlscout.evaluation import evaluate

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: Execute agent on a single benchmark with a given model.
 
-Run as ``python -m rtlscout.run_benchmark``; a checkout also has the root wrapper ``run_benchmark.py``.
+Run as ``python -m rtlscout.run_benchmark``.
 """
 
 import argparse
@@ -62,7 +62,7 @@ def main(argv=None):
     parser.add_argument("--agent-backend", default="react", choices=["react", "opencode"],
                         help="Agent backend: 'react' (default, in-process loop) or 'opencode' "
                              "(external shell agent). NOTE: this single-run path produces ADVISORY "
-                             "numbers only; for authoritative re-eval use run_multirun.py --total-runs 1")
+                             "numbers only; for authoritative re-eval use rtlscout.run_multirun --total-runs 1")
     parser.add_argument("--wall-clock-min", type=float, default=10.0,
                         help="Hard wall-clock budget in MINUTES for the opencode backend "
                              "(default 10; 0 = no limit). The react backend ignores this.")

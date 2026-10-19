@@ -4,13 +4,13 @@
 Loads results from a runs directory that contains PPA metrics.
 Supports three input formats:
   - sweep_summary.json  (from run_cost_language_sweep.py)
-  - all_results.json    (from run_sweep.py / run_benchmarks.py)
+  - all_results.json    (from rtlscout.run_sweep / run_benchmarks.py)
   - Crawled result.json files (any runs directory)
 
 Usage:
-    python experiments/plot_area_delay.py runs/cost_lang_sweep_20260223_073255
-    python experiments/plot_area_delay.py runs/cost_lang_sweep_*/  --output-dir plots/
-    python experiments/plot_area_delay.py runs/20260216_132421 --variant verilog_area
+    python -m rtlscout.plots.plot_area_delay runs/cost_lang_sweep_20260223_073255
+    python -m rtlscout.plots.plot_area_delay runs/cost_lang_sweep_*/  --output-dir plots/
+    python -m rtlscout.plots.plot_area_delay runs/20260216_132421 --variant verilog_area
 """
 
 import argparse
@@ -113,7 +113,7 @@ def load_results(path: Path) -> List[Dict[str, Any]]:
     ``path`` may be a JSON file or a directory. Supported summary files
     (tried in order):
       sweep_summary.json        – run_cost_language_sweep.py
-      all_results.json          – run_sweep.py
+      all_results.json          – rtlscout.run_sweep
       experiments_summary.json  – run_experiments_parallel.py / run_experiments_beat_baseline.py
     Falls back to crawling for result.json / experiment_result.json files.
 

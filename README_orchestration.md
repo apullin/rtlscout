@@ -22,10 +22,10 @@ sandboxed campaigns.
 
 ```bash
 # default: in-process ReAct, single container (unchanged)
-python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --total-runs 8
+python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --total-runs 8
 
 # external OpenCode agent, each run + each judge in its own --rm container
-python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 \
+python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 \
     --agent-backend opencode --mode orchestrated --wall-clock-min 10
 ```
 
@@ -273,16 +273,16 @@ Plus a human name `rtlscout-<role>-<sid8>-<run03>`. Cleanup is label-scoped and 
 refuses anything carrying `devcontainer.local_folder` (belt-and-suspenders):
 
 ```bash
-python rtlscout_cli.py list                       # this framework's containers only
-python rtlscout_cli.py cleanup [--session <id>]   # graceful stop + remove
-python rtlscout_cli.py cleanup --kill             # SIGKILL (panic)
+python -m rtlscout.containers list                       # this framework's containers only
+python -m rtlscout.containers cleanup [--session <id>]   # graceful stop + remove
+python -m rtlscout.containers cleanup --kill             # SIGKILL (panic)
 ```
 
 ```mermaid
 flowchart TD
   L1["normal exit: harness stops the IDs it launched<br/>(atexit + SIGINT/SIGTERM)"]
   L2["--rm: daemon reaps any container that EXITS<br/>even if the harness died"]
-  L3["orphan sweep: rtlscout_cli.py cleanup<br/>(label-scoped; runs without the harness)"]
+  L3["orphan sweep: rtlscout.containers cleanup<br/>(label-scoped; runs without the harness)"]
   L4["optional: age-based reaper"]
   L1 --> L2 --> L3 --> L4
   DC["devcontainer (no rtlscout.* label)"] -. never matched .-> L3
@@ -322,14 +322,14 @@ containers use `--network none`.
 
 ```bash
 # 0) offline smoke (no API) — default react
-python run_benchmark.py --benchmark simple_adder --model fake:simple_adder_pass
+python -m rtlscout.run_benchmark --benchmark simple_adder --model fake:simple_adder_pass
 
 # 1) react, single-container, with authoritative re-eval (A/B parity)
-python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 \
+python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 \
     --total-runs 8 --reeval
 
 # 2) opencode, single-container  (run INSIDE an rtlscout-opencode container)
-python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
+python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
     --agent-backend opencode --total-runs 1 --wall-clock-min 10 --skip-cec
 
 # 3) opencode, ORCHESTRATED — harness needs an identity mount + the docker socket:
@@ -337,7 +337,7 @@ docker run --rm -v "$PWD:$PWD" -v /usr/bin/docker:/usr/bin/docker:ro \
   -v /var/run/docker.sock:/var/run/docker.sock --group-add "$(getent group docker | cut -d: -f3)" \
   --user "$(id -u):$(id -g)" -e HOME=/tmp -w "$PWD" rtlscout-opencode:latest \
   bash -c 'export PATH=/home/vscode/pyenv_eda/bin:/usr/local/bin:$PATH; \
-    python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
+    python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
       --agent-backend opencode --mode orchestrated --total-runs 4 \
       --wall-clock-min 10 --skip-cec --runs-root "'"$PWD"'/runs/orch"'
 
@@ -346,11 +346,11 @@ docker run --rm -v "$PWD:$PWD" -v /usr/bin/docker:/usr/bin/docker:ro \
 #     it does NOT need the EDA toolchain (that lives in the judge containers). Option (3) is the
 #     bundled, validated path; this is here for completeness.
 pip install -e deps/spire-hdl -r requirements.txt   # one-time host setup
-python run_multirun.py --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
+python -m rtlscout.run_multirun --benchmark fpmul_f16 --model openrouter:z-ai/glm-5.2 --language spirehdl \
     --agent-backend opencode --mode orchestrated --total-runs 4 \
     --wall-clock-min 10 --skip-cec --runs-root runs/orch
 
-python rtlscout_cli.py cleanup --session <id-printed-at-start>
+python -m rtlscout.containers cleanup --session <id-printed-at-start>
 ```
 
 ---

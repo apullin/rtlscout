@@ -173,7 +173,7 @@ def provision_workspace(
     shutil.copy2(benchmark.testbench, workspace / "tb.sv")
 
     # Copy *all* data files (.dat) used by data-driven testbenches — note: all of
-    # them, not just vectors.dat (run_eval.py's two-name overlay misses the rest;
+    # them, not just vectors.dat (rtlscout.run_eval's two-name overlay misses the rest;
     # see handover §4.6).
     for dat_file in benchmark.root.glob("*.dat"):
         shutil.copy2(dat_file, workspace / dat_file.name)

@@ -2,7 +2,7 @@
 name: add-benchmark
 description: >-
   Add a new RTL design as an RTL Scout benchmark — directory layout, the self-checking
-  testbench contract, the add_benchmark.py generators, and porting an existing Verilog or
+  testbench contract, the rtlscout.add_benchmark generators, and porting an existing Verilog or
   Spire design. Use when integrating a new design (or an external benchmark suite) into
   the benchmarks/ folder.
 ---
@@ -36,7 +36,7 @@ Pin these down **before** creating any files:
 
 1. **Scope** — a **single design** (`benchmarks/<name>/`) or a **suite of cases** (nested,
    `benchmarks/<suite>/<case>/`, discovered recursively and referenced as `--benchmark <suite>/<case>`).
-   `simple_adder` / `fpmul_f16` are single; `dr_rtl` / `rtl_rewriter` are suites. The `add_benchmark.py`
+   `simple_adder` / `fpmul_f16` are single; `dr_rtl` / `rtl_rewriter` are suites. The `rtlscout.add_benchmark`
    generators produce a single benchmark per invocation.
 2. **Target language** — the language the agent **writes the design in**: `verilog`, `spirehdl`, or
    `amaranth`. Fix this up front; `--language` must match it, and a `context/` starting point (if any)
@@ -60,9 +60,9 @@ Pin these down **before** creating any files:
   schema, the testbench contract (`<module_name> dut (...)`, `TB_SUMMARY total=N errors=E`, a final
   `PASS` or `$fatal`), the `context/` starting-point convention, and the **Quick check** snippet
   that confirms the benchmark loads and the module name matches the testbench.
-- **`add_benchmark.py`** — generators for arithmetic designs (`multiplier`, `adder`, `fpmul`,
+- **`rtlscout.add_benchmark`** — generators for arithmetic designs (`multiplier`, `adder`, `fpmul`,
   `fpadd`, `mac`, `matmulacc`): emit `tb.sv`, test vectors, the reference `.v`, `metadata.json`,
-  and a Spire `context/`. Run `python add_benchmark.py <generator> --help`.
+  and a Spire `context/`. Run `python -m rtlscout.add_benchmark <generator> --help`.
 
 ## 2. Worked examples — how real suites were integrated
 
@@ -116,7 +116,7 @@ Diagnosing this cost hours; the giveaway is `Path Group: path delay` (or `VCLK`)
 - Porting a reference design **verbatim** is not a reason to keep `clk_i`. A port rename changes no
   logic or structure, and correct measurement outranks byte-fidelity to upstream naming.
 
-Verify after any change: run `run_eval.py --cost-metric delay` and confirm `worst_timing_path`
+Verify after any change: run `rtlscout.run_eval --cost-metric delay` and confirm `worst_timing_path`
 reports `Path Group: clk` with a **register** startpoint, not an input port.
 
 ## Checklist
@@ -133,8 +133,8 @@ reports `Path Group: clk` with a **register** startpoint, not an input port.
       the tb is the only correctness oracle, so weak coverage lets broken designs pass (see
       `README_add_benchmarks.md` → `tb.sv`).
 - [ ] Confirm discovery + module match with the **Quick check** snippet in `README_add_benchmarks.md`.
-- [ ] Smoke-test **offline** (free, no API key): `python run_benchmark.py --benchmark <name> --model fake:simple_adder_pass`,
-      and/or evaluate a reference design with `run_eval.py`.
+- [ ] Smoke-test **offline** (free, no API key): `python -m rtlscout.run_benchmark --benchmark <name> --model fake:simple_adder_pass`,
+      and/or evaluate a reference design with `rtlscout.run_eval`.
 - [ ] *(optional, strongest check)* a **real agent run** with a live model, e.g.
-      `python run_benchmark.py --benchmark <name> --model openrouter:qwen/qwen3.7-max --language <lang>`.
+      `python -m rtlscout.run_benchmark --benchmark <name> --model openrouter:qwen/qwen3.7-max --language <lang>`.
       **This spends API credits — confirm with the user before launching it.**

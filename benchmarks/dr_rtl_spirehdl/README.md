@@ -187,7 +187,7 @@ Optimised variants for `router`, `pcie`, `datapath` live in
 the "balanced bit-tree mux-cascade fix" section below for the 3-way
 ADP comparison.)
 
-Spirehdl rows come from `run_eval.py --cost-metric yosys_cells/yosys_wires/transistors`;
+Spirehdl rows come from `rtlscout.run_eval --cost-metric yosys_cells/yosys_wires/transistors`;
 verilog rows from the same flow with one fix:
 
 **Note on transistor measurements.** `rtlscout/cost.py`'s `YosysTransistorCost`
@@ -244,7 +244,7 @@ the apples-to-apples comparison.
 Once a `<case>/context/starting_point.py` is written, smoke-test it via:
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/dr_rtl_spirehdl/<case>/context/starting_point.py \
     --benchmark benchmarks/dr_rtl_spirehdl/<case> \
     --language spirehdl --cost-metric yosys_cells
@@ -252,7 +252,7 @@ Once a `<case>/context/starting_point.py` is written, smoke-test it via:
 
 Expected: `Correctness: PASS, 2000/2000` and finite `yosys_cells`.
 
-`run_eval.py` sandboxes by default (throwaway temp copy of the design's
+`rtlscout.run_eval` sandboxes by default (throwaway temp copy of the design's
 folder, deleted afterwards), so `context/` stays pristine — the old
 "always pass `--workdir /tmp/...`" workaround is no longer needed. If you
 want the emitted `design.v` afterwards (e.g. for the dual-instantiation

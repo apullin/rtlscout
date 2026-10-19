@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: Execute agent across multiple models and benchmarks.
 
-Run as ``python -m rtlscout.run_sweep``; a checkout also has the root wrapper ``run_sweep.py``.
+Run as ``python -m rtlscout.run_sweep``.
 """
 
 import argparse

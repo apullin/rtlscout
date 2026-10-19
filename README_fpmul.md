@@ -37,7 +37,7 @@ targeting **delay**, and the resulting Pareto-optimal designs are pooled.
 ### 1.1 Area campaign
 
 ```bash
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model openrouter:qwen/qwen3.7-max \
     --total-runs 12 --max-concurrent 4 --max-steps 30 \
@@ -52,7 +52,7 @@ Output: `runs/multirun_<AREA_TS>/` (note the timestamp for later steps).
 ### 1.2 Delay campaign
 
 ```bash
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model openrouter:qwen/qwen3.7-max \
     --total-runs 6 --max-concurrent 2 --max-steps 30 \
@@ -67,8 +67,8 @@ Output: `runs/multirun_<DELAY_TS>/`.
 ### 1.3 Plot cost evolution + Pareto scatter
 
 ```bash
-python plot_pareto_paper.py runs/multirun_<AREA_TS> -o images/
-python plot_pareto_paper.py --side-by-side-combined \
+python -m rtlscout.plots.plot_pareto_paper runs/multirun_<AREA_TS> -o images/
+python -m rtlscout.plots.plot_pareto_paper --side-by-side-combined \
     runs/multirun_<AREA_TS> runs/multirun_<DELAY_TS> \
     --label-a "Area target" --label-b "Delay target" -o images/
 ```
@@ -76,7 +76,7 @@ python plot_pareto_paper.py --side-by-side-combined \
 ### 1.4 Extract the Phase 1 Pareto front (ablation baseline)
 
 ```bash
-python extract_pareto.py \
+python -m rtlscout.extract_pareto \
     runs/multirun_<AREA_TS> \
     runs/multirun_<DELAY_TS> \
     --benchmark fpmul_f16 --no-flowy \
@@ -108,7 +108,7 @@ Flowy/Mockturtle backend is installed (see the paper for parameters; default 50 
 ### 2.1 Area + synthesis-optimization campaign
 
 ```bash
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model openrouter:qwen/qwen3.7-max \
     --total-runs 6 --max-concurrent 2 --max-steps 30 \
@@ -125,7 +125,7 @@ Output: `runs/multirun_<ABC_AREA_TS>/`.
 ### 2.2 Delay + synthesis-optimization campaign
 
 ```bash
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model openrouter:qwen/qwen3.7-max \
     --total-runs 4 --max-concurrent 1 --max-steps 30 \
@@ -142,7 +142,7 @@ Output: `runs/multirun_<ABC_DELAY_TS>/`.
 ### 2.3 Extract combined Pareto front (Phase 1 + Phase 2)
 
 ```bash
-python extract_pareto.py \
+python -m rtlscout.extract_pareto \
     runs/multirun_<AREA_TS> \
     runs/multirun_<DELAY_TS> \
     runs/multirun_<ABC_AREA_TS> \

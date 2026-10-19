@@ -9,10 +9,10 @@ and the composed Verilog is measured: transistors (rtlscout metric — the same 
 run's eval numbers) and AIG depth (from the gate's own AAG conversion). The starting point
 (``eval_1``'s workspace snapshot) is measured the same way when present.
 
-Writes ``composition_space.json`` into the run dir; ``visualize_db_run.py`` picks it up as the
+Writes ``composition_space.json`` into the run dir; ``rtlscout.plots.visualize_db_run`` picks it up as the
 full-circuit composition-space panel.
 
-Usage: python measure_db_compositions.py <run_dir>
+Usage: python -m rtlscout.tools.measure_db_compositions <run_dir>
 """
 import itertools
 import json
@@ -23,8 +23,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(REPO_ROOT))
 
 
 def pareto(points):

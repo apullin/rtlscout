@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plot area (x) vs delay (y) overlaying agent sweep results and rtlscout.tech_eval reference data.
 
-The agent records come from a runs directory (same formats as plot_area_delay.py).
+The agent records come from a runs directory (same formats as rtlscout.plots.plot_area_delay).
 The reference records come from one or more rtlscout.tech_eval PPA JSON files whose
 ``case_results`` contain per-architecture, per-target-delay measurements.
 
@@ -16,14 +16,14 @@ A secondary legend shows the marker/line shapes so the source is always clear.
 
 Usage
 -----
-  python plot_area_delay_with_ref.py runs/cost_lang_sweep_20260223_073255 \\
+  python -m rtlscout.plots.plot_area_delay_with_ref runs/cost_lang_sweep_20260223_073255 \\
       --ref results/ppa/Add_a16_results.json \\
       [--ref-benchmark add16] \\
       [--output-dir plots/] \\
       [--variant verilog_area]
 
   # Multiple ref files, each with its own benchmark mapping:
-  python plot_area_delay_with_ref.py runs/sweep/ \\
+  python -m rtlscout.plots.plot_area_delay_with_ref runs/sweep/ \\
       --ref results/ppa/Add_a16_results.json --ref-benchmark add16 \\
       --ref results/ppa/Add_a4_results.json  --ref-benchmark add4
 """
@@ -40,7 +40,7 @@ import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
 # Re-use the agent-side loader from the sibling script.
-from plot_area_delay import load_results, _COLORS, _short_model
+from rtlscout.plots.plot_area_delay import load_results, _COLORS, _short_model
 from rtlscout.tech_eval.ppa_extract.core.ppa_extraction import PPA_REPORT_TIME_UNIT
 
 

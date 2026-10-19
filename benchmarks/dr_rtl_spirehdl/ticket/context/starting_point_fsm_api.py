@@ -14,7 +14,7 @@ the original verilog's three-`always`-block structure:
 Pick whichever variant reads better for the use case. Run framework eval
 with the chosen file path:
 
-    python run_eval.py \\
+    python -m rtlscout.run_eval \\
         benchmarks/dr_rtl_spirehdl/ticket/context/starting_point_fsm_api.py \\
         --benchmark benchmarks/dr_rtl_spirehdl/ticket \\
         --language spirehdl --cost-metric yosys_cells

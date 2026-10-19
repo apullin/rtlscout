@@ -18,7 +18,7 @@ benchmarks/dr_rtl/<name>/
     starting_point.v   (or .sv)   # verbatim baseline from DR_RTL
 ```
 
-`run_benchmark.py --benchmark dr_rtl/<name>` resolves it via the relative-path
+`rtlscout.run_benchmark --benchmark dr_rtl/<name>` resolves it via the relative-path
 lookup in `rtlscout/benchmarks.py:load_benchmarks`.
 
 ## Status
@@ -239,7 +239,7 @@ asserted/deasserted polarity.
 ```bash
 mkdir -p /tmp/dr_rtl_<name>_smoke
 cp benchmarks/dr_rtl/<name>/context/starting_point.v /tmp/dr_rtl_<name>_smoke/
-python run_eval.py \
+python -m rtlscout.run_eval \
     /tmp/dr_rtl_<name>_smoke/starting_point.v \
     --benchmark benchmarks/dr_rtl/<name> \
     --language verilog --cost-metric yosys_cells
@@ -251,7 +251,7 @@ finite `yosys_cells`.
 ## Running the agent on one design
 
 ```bash
-python run_benchmark.py \
+python -m rtlscout.run_benchmark \
     --benchmark dr_rtl/<name> \
     --language verilog --cost-metric yosys_cells \
     --model anthropic:claude-opus-4-7 \

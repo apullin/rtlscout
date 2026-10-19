@@ -2,8 +2,8 @@
 """CLI: Plot multirun optimiser results.
 
 Usage:
-  python plot_multirun.py --input runs/multirun_<ts>/multirun_summary.json
-  python plot_multirun.py --input runs/multirun_<ts>/  # auto-finds multirun_summary.json
+  python -m rtlscout.plots.plot_multirun --input runs/multirun_<ts>/multirun_summary.json
+  python -m rtlscout.plots.plot_multirun --input runs/multirun_<ts>/  # auto-finds multirun_summary.json
 """
 
 import argparse

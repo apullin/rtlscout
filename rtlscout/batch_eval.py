@@ -6,19 +6,19 @@ Evaluates each design_NNN/ at the target_delay from the manifest entry
 
 Usage:
     # Use per-entry target_delay from manifest
-    python batch_eval.py pareto_fronts/fpmul_sweep_flowy/ \
+    python -m rtlscout.batch_eval pareto_fronts/fpmul_sweep_flowy/ \
         --benchmark benchmarks/fpmul_f16
 
     # Override with global target delays
-    python batch_eval.py pareto_fronts/fpmul_sweep_flowy/ \
+    python -m rtlscout.batch_eval pareto_fronts/fpmul_sweep_flowy/ \
         --benchmark benchmarks/fpmul_f16 \
         --target-delay 800 1800
 
     # Evaluate un-optimized designs (no Flowy)
-    python batch_eval.py pareto_fronts/fpmul_sweep/ \
+    python -m rtlscout.batch_eval pareto_fronts/fpmul_sweep/ \
         --benchmark benchmarks/fpmul_f16
 
-Run as ``python -m rtlscout.batch_eval``; a checkout also has the root wrapper ``batch_eval.py``.
+Run as ``python -m rtlscout.batch_eval``.
 """
 
 import argparse

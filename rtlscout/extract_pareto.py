@@ -31,11 +31,11 @@ smaller-or-equal x also had smaller-or-equal y). This gives an
 O(n log n) algorithm.
 
 Usage:
-    python extract_pareto.py runs/multirun_20260316_143944 -o pareto_front/
-    python extract_pareto.py runs/mult8 -o pareto_mult8/
-    python extract_pareto.py runs/mult8 --dims size,depth -o pareto_aig/
+    python -m rtlscout.extract_pareto runs/multirun_20260316_143944 -o pareto_front/
+    python -m rtlscout.extract_pareto runs/mult8 -o pareto_mult8/
+    python -m rtlscout.extract_pareto runs/mult8 --dims size,depth -o pareto_aig/
 
-Run as ``python -m rtlscout.extract_pareto``; a checkout also has the root wrapper ``extract_pareto.py``.
+Run as ``python -m rtlscout.extract_pareto``.
 """
 
 import argparse

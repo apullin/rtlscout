@@ -8,10 +8,10 @@ Generates publication-ready figures:
 
 Usage:
     # Single multirun run — all plots
-    python plot_pareto_paper.py runs/multirun_20260318_090431 -o plots/
+    python -m rtlscout.plots.plot_pareto_paper runs/multirun_20260318_090431 -o plots/
 
     # Compare two pareto sets (from extract_pareto / align_pareto)
-    python plot_pareto_paper.py --compare pareto_fpmul/ pareto_fpmul_no_flowy/ -o plots/
+    python -m rtlscout.plots.plot_pareto_paper --compare pareto_fpmul/ pareto_fpmul_no_flowy/ -o plots/
 """
 
 import argparse

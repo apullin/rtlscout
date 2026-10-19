@@ -73,12 +73,12 @@ Every turbo_rtl benchmark's `metadata.json` carries a `source` block pointing ba
 ## Quick smoke test
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl/<name>/context/starting_point.v \
     --benchmark benchmarks/turbo_rtl/<name> \
     --language verilog --cost-metric sky130_adp
 
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl_spirehdl/<name>/context/starting_point.py \
     --benchmark benchmarks/turbo_rtl_spirehdl/<name> \
     --language spirehdl --cost-metric sky130_adp
@@ -88,7 +88,7 @@ Expected on a freshly-added benchmark: both say `Correctness: PASS, 2002/2002`, 
 
 ## Running starting_point.py through run_eval — sandboxed by default
 
-`run_eval.py` runs in a *throwaway sandbox copy* of the design's folder by
+`rtlscout.run_eval` runs in a *throwaway sandbox copy* of the design's folder by
 default, so pointing it at `context/starting_point.py` leaves `context/`
 pristine — the historical footgun (artifacts leaking into `context/` and from
 there into every agent workspace via `rtlscout/runner.py`'s context-copy) is gone.
@@ -198,7 +198,7 @@ from rtlscout.benchmarks import load_benchmark
 b = load_benchmark(Path('benchmarks/turbo_rtl/my_bench'))
 print(b.name, b.module_name)
 "
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl/my_bench/context/starting_point.v \
     --benchmark benchmarks/turbo_rtl/my_bench \
     --language verilog --cost-metric sky130_adp
@@ -345,7 +345,7 @@ When hand-converting a bit-accurate golden to Spire, these are the things that b
 
 ### 7. Verify the Spire benchmark agrees with the Verilog golden
 
-Build both with verilator and compare outputs head-to-head before trusting `run_eval.py`:
+Build both with verilator and compare outputs head-to-head before trusting `rtlscout.run_eval`:
 
 ```bash
 cd /tmp && mkdir -p shdl_cmp && cd shdl_cmp
@@ -362,7 +362,7 @@ The rgb_diff_check translation failed 18/2002 vectors on the first try; this pro
 ### 8. Run the framework eval on the Spire variant
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/turbo_rtl_spirehdl/my_bench/context/starting_point.py \
     --benchmark benchmarks/turbo_rtl_spirehdl/my_bench \
     --language spirehdl --cost-metric sky130_adp
@@ -372,7 +372,7 @@ Must report `PASS, 2002/2002`. Then **clean up** the `context/` dir again (obj_d
 
 ### 9. Register reference numbers
 
-Add the benchmark to the table at the top of this file with a note on the reference `ppa_opt.adp` to beat. That's the number the agent campaign (`run_benchmark.py --cost-metric sky130_adp`) will be compared against.
+Add the benchmark to the table at the top of this file with a note on the reference `ppa_opt.adp` to beat. That's the number the agent campaign (`rtlscout.run_benchmark --cost-metric sky130_adp`) will be compared against.
 
 ---
 

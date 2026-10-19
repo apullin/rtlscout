@@ -296,7 +296,7 @@ the inlined approach matches how
 with `language: spirehdl` / `starting_point: context/starting_point.py`.
 
 **Ported** = `context/starting_point.py` exists, the probe tb shows
-zero MISMATCH lines across 500+ random vectors, AND `run_eval.py
+zero MISMATCH lines across 500+ random vectors, AND `rtlscout.run_eval
 --language spirehdl --cost-metric yosys_cells` reports PASS 2000/2000.
 
 ## Designs we tried but skipped

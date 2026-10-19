@@ -94,7 +94,7 @@ point is being compared against a different oracle than the verilog one.
 ## Running one
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/rtl_rewriter_spirehdl/case1/context/starting_point.py \
     --benchmark benchmarks/rtl_rewriter_spirehdl/case1 \
     --language spirehdl --cost-metric yosys_cells
@@ -103,7 +103,7 @@ point is being compared against a different oracle than the verilog one.
 Expected: `Correctness: PASS, 2000/2000` (or 2002/2002 for the six
 combinational cases) and the `yosys_cells` / `yosys_wires` value from the
 table above. The turbo_rtl in-place-artifact warning applies —
-`run_eval.py` will drop `obj_dir/`, `design.v`, and the copied
+`rtlscout.run_eval` will drop `obj_dir/`, `design.v`, and the copied
 `tb.sv`/`vectors.dat` into the workspace, so prefer
 `--workdir /tmp/foo` over running in `context/`.
 

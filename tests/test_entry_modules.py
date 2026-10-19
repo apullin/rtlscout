@@ -1,4 +1,5 @@
-"""The command-line tools live in the package (``python -m rtlscout.<module>``); the root scripts are wrappers."""
+"""Every command-line tool is a module of the package (``python -m rtlscout.<module>``); the repository root holds
+no scripts."""
 
 import importlib
 import subprocess
@@ -10,7 +11,9 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 MODULES = ["run_benchmark", "run_eval", "run_multirun", "run_pipeline", "run_sweep", "batch_eval", "extract_pareto",
            "containers"]
-WRAPPERS = {name: f"{name}.py" for name in MODULES if name != "containers"} | {"containers": "rtlscout_cli.py"}
+TOOLS = ["run_model", "add_benchmark", "plots.plot_results", "plots.plot_multirun", "plots.plot_pareto_paper",
+         "plots.plot_area_delay", "plots.plot_area_delay_with_ref", "plots.visualize_db_run",
+         "tools.extract_best_designs", "tools.extract_sweep_pareto", "tools.measure_db_compositions"]
 
 
 @pytest.mark.parametrize("name", MODULES)
@@ -21,28 +24,15 @@ def test_module_has_main_taking_argv(name):
     assert exit_info.value.code == 0
 
 
-@pytest.mark.parametrize("name", MODULES)
+@pytest.mark.parametrize("name", MODULES + TOOLS)
 def test_runs_as_module_from_any_directory(name, tmp_path):
     proc = subprocess.run([sys.executable, "-m", f"rtlscout.{name}", "--help"], cwd=tmp_path, capture_output=True,
                           text=True, env=_env_with_repo_on_path())
-    assert proc.returncode == 0 and "usage:" in proc.stdout, proc.stderr
+    assert proc.returncode == 0 and "usage:" in proc.stdout.lower(), proc.stderr
 
 
-@pytest.mark.parametrize("name", MODULES)
-def test_root_wrapper_still_works(name):
-    proc = subprocess.run([sys.executable, WRAPPERS[name], "--help"], cwd=REPO, capture_output=True, text=True)
-    assert proc.returncode == 0 and "usage:" in proc.stdout, proc.stderr
-
-
-def test_wrapper_reexports_what_other_scripts_import():
-    sys.path.insert(0, str(REPO))
-    try:
-        wrapper = importlib.import_module("extract_pareto")
-    finally:
-        sys.path.remove(str(REPO))
-    from rtlscout import extract_pareto as packaged
-    for attr in ("extract", "pareto_front", "_find_local_deps", "_normalized_score", "_select_top_n"):
-        assert getattr(wrapper, attr) is getattr(packaged, attr)
+def test_no_scripts_at_the_repository_root():
+    assert sorted(p.name for p in REPO.glob("*.py")) == []
 
 
 def _env_with_repo_on_path():

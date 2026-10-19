@@ -49,7 +49,7 @@ abc.history
 
 runs_*/
 logs_*/
-plots/
+/plots/
 *.blif
 method_collection/
 obsolete/

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """CLI: full Phases 1-2 optimization pipeline for a single benchmark.
 
-This is the recommended *general* workflow. It chains several `run_multirun.py`
-campaigns and combines their results into one Pareto front via `extract_pareto.py`:
+This is the recommended *general* workflow. It chains several `rtlscout.run_multirun`
+campaigns and combines their results into one Pareto front via `rtlscout.extract_pareto`:
 
   Phase 1  Structural exploration — one multirun campaign per cost metric
            (area, delay, ...), no synthesis decorators. Half explore / half
@@ -23,14 +23,14 @@ high-effort refinement) see README_fpmul.md. For the full set of per-campaign
 knobs see README_multirun.md.
 
 Example:
-  python run_pipeline.py \
+  python -m rtlscout.run_pipeline \
       --benchmark fpmul_f16 \
       --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
       --metrics area,delay --total-runs 8 --max-concurrent 4 --max-steps 20
 
 Requires an LLM provider token in .env (see README, "Running benchmarks").
 
-Run as ``python -m rtlscout.run_pipeline``; a checkout also has the root wrapper ``run_pipeline.py``.
+Run as ``python -m rtlscout.run_pipeline``.
 """
 
 import argparse
@@ -54,7 +54,7 @@ def _phase_flags(language: str, phase: int, fsm_optimize: bool) -> dict:
     return flags
 
 
-# Map run_multirun() kwarg -> run_multirun.py CLI flag, for --dry-run rendering.
+# Map run_multirun() kwarg -> rtlscout.run_multirun CLI flag, for --dry-run rendering.
 _FLAG_CLI = {"arith_autoconfig": "--arith-autoconfig", "abc_optimize": "--abc-optimize",
              "fsm_optimize": "--fsm-optimize"}
 
@@ -87,7 +87,7 @@ def _print_dry_run(plan: list, args, pareto_dims: tuple, out: Path) -> None:
     print("# Phases 1-2 pipeline plan (dry run — nothing executed)\n")
     for c in plan:
         cmd = [
-            "python run_multirun.py",
+            "python -m rtlscout.run_multirun",
             f"--benchmark {args.benchmark}",
             f"--model {args.model}",
             f"--language {args.language}",
@@ -113,7 +113,7 @@ def _print_dry_run(plan: list, args, pareto_dims: tuple, out: Path) -> None:
         print("  " + " \\\n      ".join(cmd) + "\n")
     all_dirs = " ".join(str(c["runs_root"]) for c in plan)
     print(f"# Combined {dim_x}-vs-{dim_y} Pareto front over all campaigns")
-    print(f"  python extract_pareto.py {all_dirs} --dims {dim_x},{dim_y} "
+    print(f"  python -m rtlscout.extract_pareto {all_dirs} --dims {dim_x},{dim_y} "
           f"--separate-dirs -o {out}\n")
 
 
@@ -225,7 +225,7 @@ def main(argv=None):
     extract([c["runs_root"] for c in plan], out, separate_dirs=True,
             max_points=args.max_points, dim_x=dim_x, dim_y=dim_y)
     plot_dirs = " ".join(str(c["runs_root"]) for c in plan)
-    print(f"\nPlot the Pareto front with:\n  python plot_pareto_paper.py {plot_dirs} -o plots/{args.benchmark}/")
+    print(f"\nPlot the Pareto front with:\n  python -m rtlscout.plots.plot_pareto_paper {plot_dirs} -o plots/{args.benchmark}/")
 
 
 if __name__ == "__main__":

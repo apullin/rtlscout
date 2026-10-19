@@ -46,9 +46,9 @@ designs/
       spirehdl/ …
 ```
 
-## Re-evaluating a design (`run_eval.py`)
+## Re-evaluating a design (`rtlscout.run_eval`)
 
-Evaluation uses the RTLScout repo's debug entry point, `run_eval.py`, which runs
+Evaluation uses RTLScout's evaluation entry point, `python -m rtlscout.run_eval`, which runs
 the **full pipeline**: SpireHDL compile (for `.py`) → Verilator correctness
 against `tb.sv`/`vectors.dat` → Yosys cost. Because `tb.sv` and `vectors.dat` are
 bundled next to each design, you can evaluate in place.
@@ -67,7 +67,7 @@ Pick the cost metric matching the run: `yosys_cells` for `cells_run`,
 
 ```bash
 cd designs/transistor_run/case3/verilog
-python /path/to/rtl_scout/run_eval.py best.sv \
+python -m rtlscout.run_eval best.sv \
     --language verilog \
     --cost-metric yosys_transistors \
     --top-module example
@@ -77,7 +77,7 @@ python /path/to/rtl_scout/run_eval.py best.sv \
 
 ```bash
 cd designs/transistor_run/case3/spirehdl
-python /path/to/rtl_scout/run_eval.py best.py \
+python -m rtlscout.run_eval best.py \
     --language spirehdl \
     --cost-metric yosys_transistors \
     --top-module example
