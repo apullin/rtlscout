@@ -14,7 +14,7 @@
 
 # RTL Scout
 
-An RTL design agent powered by selectable LLM backends (DeepInfra, Anthropic, OpenRouter) with tool use. The agent iteratively creates and optimizes Verilog/SystemVerilog, [Spire HDL](https://github.com/huawei-csl/spire-hdl) or Amaranth designs, targeting **correctness first, then minimal cost** under a configurable cost metric. The agent can run as the built-in in-process loop or as an external OpenCode agent in a sandboxed, per-run container.
+An RTL design agent powered by selectable LLM backends (DeepInfra, Anthropic, OpenRouter, or a self-hosted OpenAI-compatible server) with tool use. The agent iteratively creates and optimizes Verilog/SystemVerilog, [Spire HDL](https://github.com/huawei-csl/spire-hdl) or Amaranth designs, targeting **correctness first, then minimal cost** under a configurable cost metric. The agent can run as the built-in in-process loop or as an external OpenCode agent in a sandboxed, per-run container.
 
 ## What RTL Scout does
 
@@ -57,7 +57,7 @@ Next, add real API keys to `.env` and pick a workflow from [Choosing an entry po
 - **Git** with submodule support: the `spire-hdl` submodule is required.
 - **~3 GB** of free disk for the prebuilt slim image (~54 GB if you build the full image from source).
 - *(optional)* **VS Code** with the Dev Containers extension, for the devcontainer workflow.
-- *(for real runs only)* an **LLM provider API key**: DeepInfra, Anthropic, or OpenRouter. Not needed for the quick start above.
+- *(for real runs only)* an **LLM provider API key** (DeepInfra, Anthropic, or OpenRouter) or a **local OpenAI-compatible server** (vLLM, Ollama, llama.cpp, LM Studio). Not needed for the quick start above.
 
 ## Installation Details
 
@@ -157,6 +157,8 @@ Requests to OpenRouter models (`openrouter:<vendor>/<model>`) take three more, a
 | `RTLSCOUT_OPENROUTER_MAX_TOKENS` | cap on one completion, reasoning included | the provider's cap |
 
 Each run's `result.json` tallies the providers that served it and the finish reasons (`llm_providers`, `finish_reasons`).
+
+A self-hosted model (`local:<model name as the server knows it>`) is reached through two more: `LOCAL_BASE_URL`, the server's `/v1` endpoint (required, e.g. `http://localhost:8000/v1` for vLLM or `http://localhost:11434/v1` for Ollama), and `LOCAL_API_KEY` (optional; most local servers accept any value). The server must implement the OpenAI chat-completions API with tool calls.
 
 Spire HDL runs (`--language spirehdl` with an agent) quote the spire-hdl documentation and examples in their prompts. Those are part of the spire-hdl repository, not of its wheel, so outside a checkout point `RTLSCOUT_SPIRE_HDL_DIR` at a clone of [spire-hdl](https://github.com/huawei-csl/spire-hdl) at the installed version. Evaluating an existing Spire design (`run_eval`) and all Verilog and Amaranth flows need only the installed packages. The OpenCode backend's orchestrated mode mounts the workspace root into its containers and therefore needs a checkout.
 
@@ -362,7 +364,7 @@ no task tool), and reports/selections are computed from the DB, never taken from
 
 ## Running benchmarks
 
-> Every command here drives an LLM provider, so set your API token in `.env` first (`DEEPINFRA_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, …); see [Installation](#installation-details). The `--model` argument always uses **`provider:model`** syntax; providers are `deepinfra`, `anthropic`, `openrouter` (and `fake` for offline testing).
+> Every command here drives an LLM provider, so set your API token in `.env` first (`DEEPINFRA_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, …); see [Installation](#installation-details). The `--model` argument always uses **`provider:model`** syntax; providers are `deepinfra`, `anthropic`, `openrouter`, `local` (a self-hosted OpenAI-compatible server at `LOCAL_BASE_URL`) and `fake` for offline testing.
 
 The examples use `fpmul_f16`, but any directory under `benchmarks/` works; swap the benchmark, model, and cost metric for yours.
 
@@ -437,7 +439,7 @@ core/
 ├── cost.py          # Pluggable cost metrics (transistors, PPA delay/area/power)
 ├── evaluation.py    # Combines correctness + cost
 ├── agent.py         # Tool-use agent (7 tools)
-├── llm_client.py    # LLM backends (DeepInfra, Anthropic, OpenRouter)
+├── llm_client.py    # LLM backends (DeepInfra, Anthropic, OpenRouter, local OpenAI-compatible servers)
 ├── benchmarks.py    # Benchmark loading
 └── runner.py        # Orchestration (model x benchmark)
 
@@ -582,6 +584,11 @@ python run_benchmark.py \
 python run_benchmark.py \
   --benchmark alu8 \
   --model deepinfra:meta-llama/Llama-3.3-70B-Instruct-Turbo
+
+# A model served locally (vLLM, Ollama, llama.cpp, LM Studio): LOCAL_BASE_URL in .env points at the server
+python run_benchmark.py \
+  --benchmark alu8 \
+  --model local:Qwen/Qwen3-32B
 
 # Mixed providers in a sweep
 python run_sweep.py \
