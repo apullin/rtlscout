@@ -3,7 +3,7 @@
 
 A multirun summary is just several multiruns chained (phase 1 → phase 2
 seeded from phase 1 → …) for each ``(case × language)`` combination. This
-script re-uses the plot style of ``plot_multirun.py`` but lays phases
+script re-uses the plot style of ``rtlscout.plots.plot_multirun`` but lays phases
 end-to-end on one x-axis per plot, so you can see the seed carry-over
 across phases directly.
 

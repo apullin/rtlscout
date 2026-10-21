@@ -149,7 +149,7 @@ verilog source and re-ran the framework:
 ```bash
 sed 's/<= #1 /<= /g' benchmarks/dr_rtl/i2c/context/starting_point.v \
   > /tmp/i2c_clean.v
-~/pyenv_eda/bin/python run_eval.py /tmp/i2c_clean.v \
+~/pyenv_eda/bin/python -m rtlscout.run_eval /tmp/i2c_clean.v \
     --benchmark benchmarks/dr_rtl/i2c --language verilog \
     --cost-metric yosys_cells --workdir /tmp/i2c_clean_run
 ```

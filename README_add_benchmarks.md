@@ -6,18 +6,18 @@ For a worked example of integrating an external benchmark suite (including Veril
 
 ## Option A: generate from spire-hdl
 
-For benchmarks built on top of spire-hdl's arithmetic generators (multipliers, adders, MACs, FP units, matmuls), use `add_benchmark.py`. It produces test vectors, a data-driven `tb.sv`, the reference `.v`, `metadata.json`, `description.txt`, and a `context/` directory with the spire-hdl source files used to construct the design.
+For benchmarks built on top of spire-hdl's arithmetic generators (multipliers, adders, MACs, FP units, matmuls), use `rtlscout.add_benchmark`. It produces test vectors, a data-driven `tb.sv`, the reference `.v`, `metadata.json`, `description.txt`, and a `context/` directory with the spire-hdl source files used to construct the design.
 
 ```bash
-python add_benchmark.py multiplier --n-bits 8 --encoding unsigned
-python add_benchmark.py adder      --n-bits 16 --encoding twos_complement
-python add_benchmark.py fpmul      --exponent-width 5 --fraction-width 10 --subnormal-support
-python add_benchmark.py fpadd      --exponent-width 5 --fraction-width 10 --subnormal-support
-python add_benchmark.py mac        --n-bits 8 --c-bits 16
-python add_benchmark.py matmulacc  --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
+python -m rtlscout.add_benchmark multiplier --n-bits 8 --encoding unsigned
+python -m rtlscout.add_benchmark adder      --n-bits 16 --encoding twos_complement
+python -m rtlscout.add_benchmark fpmul      --exponent-width 5 --fraction-width 10 --subnormal-support
+python -m rtlscout.add_benchmark fpadd      --exponent-width 5 --fraction-width 10 --subnormal-support
+python -m rtlscout.add_benchmark mac        --n-bits 8 --c-bits 16
+python -m rtlscout.add_benchmark matmulacc  --dim-m 4 --dim-n 4 --dim-k 4 --a-width 4
 ```
 
-Run `python add_benchmark.py <generator> --help` for the full set of flags. Add `--name <bench_name>` to override the auto-generated directory name, and `--force` to overwrite an existing benchmark directory.
+Run `python -m rtlscout.add_benchmark <generator> --help` for the full set of flags. Add `--name <bench_name>` to override the auto-generated directory name, and `--force` to overwrite an existing benchmark directory.
 
 ## Option B: add a benchmark manually
 
@@ -89,7 +89,7 @@ Generators may add an extra `"generator": { ... }` block for provenance — that
 
 A self-checking SystemVerilog testbench that:
 
-1. Instantiates the design as `<module_name> dut (...)`. The exact pattern `<name> dut(` is parsed at evaluation time by `batch_eval.py`, so don't rename `dut`.
+1. Instantiates the design as `<module_name> dut (...)`. The exact pattern `<name> dut(` is parsed at evaluation time by `rtlscout.batch_eval`, so don't rename `dut`.
 2. Drives stimuli (either inline patterns or by reading `vectors.dat`).
 3. Prints `TB_SUMMARY total=<N> errors=<E>` followed by `PASS` or `$fatal(1, "FAIL")`. The framework greps `TB_SUMMARY` and the final `PASS/FAIL` line to score correctness.
 
@@ -99,7 +99,7 @@ For data-driven testbenches, place the vectors in `vectors.dat` next to `tb.sv` 
 
 **Where the expected values come from.** A self-checking testbench needs a known-correct oracle. If you have a reference design, use it directly (instantiate it alongside `dut` and compare, or pre-compute outputs from it). If you're starting from only a *specification*, derive the golden behavior yourself: compute it inline for simple/derivable logic, or write a behavioral / Python reference model that emits `vectors.dat` (inputs + expected outputs). No reference is required to author a benchmark — but the expected behavior must come from *somewhere* trustworthy.
 
-Anything in `context/` is copied into the agent's workspace at the start of a run (see `core/runner.py`). Typical contents:
+Anything in `context/` is copied into the agent's workspace at the start of a run (see `rtlscout/runner.py`). Typical contents:
 
 - `starting_point.py` — a known-correct reference design the agent can read and incrementally modify (used by the `fpmul_f16` / `fpadd_f16` benchmarks).
 - Helper modules (Python or Verilog) that the reference depends on.
@@ -111,7 +111,7 @@ Omit the `context/` directory entirely if the benchmark is meant to be solved fr
 
 > A working starting point is provided: run `starting_point.py` (Spire mode) to generate a correct reference design (`design.v`). Study the context files in your workspace for implementation details, then optimize from there.
 
-Adapt the wording to whatever entry-point and language make sense for your benchmark (`add_benchmark.py` does this automatically when its generators ship context files — see `benchmarks/fpmul_f16/description.txt` for an example).
+Adapt the wording to whatever entry-point and language make sense for your benchmark (`rtlscout.add_benchmark` does this automatically when its generators ship context files — see `benchmarks/fpmul_f16/description.txt` for an example).
 
 ### Quick check
 
@@ -121,7 +121,7 @@ After creating the files, confirm the benchmark loads and the module name matche
 ~/pyenv_eda/bin/python -c "
 import re
 from pathlib import Path
-from core.benchmarks import load_benchmark
+from rtlscout.benchmarks import load_benchmark
 b = load_benchmark(Path('benchmarks/<bench_name>'))
 tb_dut = re.search(r'(\w+)\s+dut\s*\(', b.testbench.read_text()).group(1)
 print('module_name:', b.module_name, '| tb dut:', tb_dut, '| match:', b.module_name == tb_dut)

@@ -44,7 +44,7 @@ add noise.
 `tb.sv` column is `PASS` when the Spire-emitted design passes the
 mirrored testbench at 100% — 14/14 today.
 
-The yosys script used by `core.cost.YosysWiresCost` / `YosysCellsCost`
+The yosys script used by `rtlscout.cost.YosysWiresCost` / `YosysCellsCost`
 appends `clean -purge` after `synth`, which drops public alias buffers
 and dangling nets. Cell counts are unchanged way.
 
@@ -94,7 +94,7 @@ point is being compared against a different oracle than the verilog one.
 ## Running one
 
 ```bash
-~/pyenv_eda/bin/python run_eval.py \
+~/pyenv_eda/bin/python -m rtlscout.run_eval \
     benchmarks/rtl_rewriter_spirehdl/case1/context/starting_point.py \
     --benchmark benchmarks/rtl_rewriter_spirehdl/case1 \
     --language spirehdl --cost-metric yosys_cells
@@ -103,7 +103,7 @@ point is being compared against a different oracle than the verilog one.
 Expected: `Correctness: PASS, 2000/2000` (or 2002/2002 for the six
 combinational cases) and the `yosys_cells` / `yosys_wires` value from the
 table above. The turbo_rtl in-place-artifact warning applies —
-`run_eval.py` will drop `obj_dir/`, `design.v`, and the copied
+`rtlscout.run_eval` will drop `obj_dir/`, `design.v`, and the copied
 `tb.sv`/`vectors.dat` into the workspace, so prefer
 `--workdir /tmp/foo` over running in `context/`.
 
@@ -113,7 +113,7 @@ Cost-metric-only (skip correctness, run the `.py` manually first):
 python -c "
 from pathlib import Path
 import json, subprocess, tempfile
-from core.cost import make_cost_metric
+from rtlscout.cost import make_cost_metric
 
 case = 'case1'
 d   = Path(f'benchmarks/rtl_rewriter_spirehdl/{case}')

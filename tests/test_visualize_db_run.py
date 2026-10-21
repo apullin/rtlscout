@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import visualize_db_run as viz
-from measure_db_compositions import aag_depth, pareto
+from rtlscout.plots import visualize_db_run as viz
+from rtlscout.tools.measure_db_compositions import aag_depth, pareto
 
 
 def test_pareto_and_aag_depth():
@@ -66,7 +66,7 @@ def test_generate_report_synthetic(synthetic_run):
     assert "s1" in html and "agent:rtl-subcircuit" in html
     assert "selected" in html and "original (seed)" in html
     assert "composition space" not in html          # panel only after measurement
-    assert "measure_db_compositions.py" in html     # ...and the report says how to get it
+    assert "rtlscout.tools.measure_db_compositions" in html     # ...and the report says how to get it
 
     (synthetic_run / "composition_space.json").write_text(json.dumps({
         "slots": ["s1"],
@@ -147,7 +147,7 @@ def test_measure_db_compositions_e2e(tmp_path, monkeypatch):
     seed_original(key, db=db_root)
     insert_design(key, _CARRY_SELECT, source="verilog", db=db_root)
 
-    from measure_db_compositions import measure_run
+    from rtlscout.tools.measure_db_compositions import measure_run
     out = json.loads(measure_run(run, all_designs=True).read_text())   # deterministic combo count
     assert len(out["results"]) >= 2                          # front combos + baseline (deduped)
     areas = {r["area"] for r in out["results"]}

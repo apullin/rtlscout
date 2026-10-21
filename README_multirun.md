@@ -24,7 +24,7 @@ No rounds, no idle time. Agents that finish fast immediately feed the pool and f
 ## Quick start
 
 ```bash
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
     --total-runs 10 --max-concurrent 4 --max-steps 30 \
@@ -118,7 +118,7 @@ The pool converges toward better designs. Agents that start fresh occasionally f
 ## CLI reference
 
 ```
-python run_multirun.py [options]
+python -m rtlscout.run_multirun [options]
 ```
 
 | Flag | Default | Description |
@@ -152,7 +152,7 @@ Use `--seed-from` to pre-populate the elite pool with passing designs from a pri
 
 ```bash
 # Point at the summary JSON
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
     --total-runs 10 --max-concurrent 4 --max-steps 30 \
@@ -160,7 +160,7 @@ python run_multirun.py \
     --seed-from runs/multirun_20260312_163540/multirun_summary.json
 
 # Or point at the directory (auto-finds multirun_summary.json)
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
     --total-runs 10 --max-concurrent 4 --max-steps 30 \
@@ -168,11 +168,11 @@ python run_multirun.py \
     --seed-from runs/multirun_20260312_163540/
 ```
 
-You can also seed from the output of `extract_pareto.py` or `extract_best_designs.py`:
+You can also seed from the output of `rtlscout.extract_pareto` or `rtlscout.tools.extract_best_designs`:
 
 ```bash
 # Seed from Pareto-optimal designs
-python run_multirun.py \
+python -m rtlscout.run_multirun \
     --benchmark fpmul_f16 \
     --model deepinfra:MiniMaxAI/MiniMax-M2.5 \
     --total-runs 10 --max-concurrent 4 --max-steps 30 \
@@ -204,11 +204,11 @@ How it works:
 | Fresh agent (empty elite pool, or `p_fresh` coin flip) | ✗ |
 | Multirun → multirun via `--seed-from <pareto_front.json>` (extract format) | ✓ only for `--separate-dirs` extracts |
 
-The propagation lives in `core.multirun.build_seed_context`, which whitelists `.spire_cache/` when copying a seeding predecessor's `best_design/` into the seeded agent's context.
+The propagation lives in `rtlscout.multirun.build_seed_context`, which whitelists `.spire_cache/` when copying a seeding predecessor's `best_design/` into the seeded agent's context.
 
-**Fresh agents don't inherit any cache** — by design. `core.multirun._make_task` (the fresh/seeded dispatch) skips `build_seed_context` entirely when the pool is empty or the `p_fresh` coin flip fires, so a fresh agent always starts from the benchmark's raw `context/` folder with a cold cache. This is intentional: fresh agents are the exploration arm and should not be biased by prior exploitation work.
+**Fresh agents don't inherit any cache** — by design. `rtlscout.multirun._make_task` (the fresh/seeded dispatch) skips `build_seed_context` entirely when the pool is empty or the `p_fresh` coin flip fires, so a fresh agent always starts from the benchmark's raw `context/` folder with a cold cache. This is intentional: fresh agents are the exploration arm and should not be biased by prior exploitation work.
 
-**Extract-format seeds carry a cache only for `--separate-dirs` extracts.** When the entry's `extracted_file` lives in its own subdirectory (`extract_pareto.py --separate-dirs`, which copies `.spire_cache/` alongside each design), `_prepare_extract_seed_dir` (`core/multirun.py:211`) carries the sibling files and dirs — including `.spire_cache/` and local `.py` deps — into the seed dir. Flat extracts only have the single `.v`/`.py` file, so nothing else can be carried. If you seed from a flat extract, either re-extract with `--separate-dirs` or convert to `multirun_summary.json` format.
+**Extract-format seeds carry a cache only for `--separate-dirs` extracts.** When the entry's `extracted_file` lives in its own subdirectory (`rtlscout.extract_pareto --separate-dirs`, which copies `.spire_cache/` alongside each design), `_prepare_extract_seed_dir` (`rtlscout/multirun.py:211`) carries the sibling files and dirs — including `.spire_cache/` and local `.py` deps — into the seed dir. Flat extracts only have the single `.v`/`.py` file, so nothing else can be carried. If you seed from a flat extract, either re-extract with `--separate-dirs` or convert to `multirun_summary.json` format.
 
 ## Output structure
 
@@ -264,17 +264,17 @@ runs/multirun_<timestamp>/
 
 ## Plotting results
 
-Use `plot_multirun.py` to visualise how cost evolves across agent runs.
+Use `rtlscout.plots.plot_multirun` to visualise how cost evolves across agent runs.
 
 ```bash
 # Point at the summary JSON directly
-python plot_multirun.py --input runs/multirun_20260312_163540/multirun_summary.json
+python -m rtlscout.plots.plot_multirun --input runs/multirun_20260312_163540/multirun_summary.json
 
 # Or point at the run directory (auto-finds multirun_summary.json)
-python plot_multirun.py --input runs/multirun_20260312_163540/
+python -m rtlscout.plots.plot_multirun --input runs/multirun_20260312_163540/
 
 # Custom output directory
-python plot_multirun.py --input runs/multirun_20260312_163540/ --output-dir ./my_plots
+python -m rtlscout.plots.plot_multirun --input runs/multirun_20260312_163540/ --output-dir ./my_plots
 ```
 
 Output is saved to `<input_dir>/plots/multirun_cost_evolution.png` by default.
@@ -299,7 +299,7 @@ Title shows the benchmark, model, and global best cost. A subtitle shows the con
 
 The multirun system is built entirely on top of existing infrastructure with no modifications to core files:
 
-- **`core/multirun.py`** — `ElitePool` class, selection logic, seed context builder, async orchestration loop
-- **`run_multirun.py`** — CLI entry point
+- **`rtlscout/multirun.py`** — `ElitePool` class, selection logic, seed context builder, async orchestration loop
+- **`rtlscout.run_multirun`** — CLI entry point
 
 It reuses `run_agent_on_benchmark()` from `runner.py` by constructing augmented `Benchmark` objects with temporary context directories containing seed design files.
