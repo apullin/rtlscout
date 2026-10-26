@@ -17,9 +17,12 @@ RUN git clone --depth 1 https://github.com/pulp-platform/ELAU /app/ELAU
 RUN apt-get update && apt-get install -y --no-install-recommends nano ccache \
     && rm -rf /var/lib/apt/lists/*
 
-# Keep Verilator's object cache outside obj_dir and writable by the runtime user.
+# Keep Verilator's object cache outside obj_dir and writable by the runtime user. The reusable part (Verilator's
+# runtime library) is small; the cap stops one-off per-design objects from filling the container layer.
+# Bypass with CCACHE_DISABLE=1 (e.g. when timing builds); inspect reuse with `ccache --show-stats`.
 ENV OBJCACHE=ccache \
-    CCACHE_DIR=/tmp/ccache
+    CCACHE_DIR=/tmp/ccache \
+    CCACHE_MAXSIZE=1G
 
 USER vscode
 WORKDIR /app
